@@ -5,14 +5,17 @@ import android.net.Uri
 import com.nevoit.cresto.data.todo.TodoRepository
 import com.nevoit.cresto.data.todo.reminder.TodoAlarmScheduler
 import com.nevoit.cresto.data.utils.EventItem
-import com.nevoit.cresto.feature.screenextract.AiTodoExtractor
+import com.nevoit.cresto.data.ai.AiTodoExtractor
 import com.nevoit.cresto.feature.screenextract.toCompressedSharedImageDataUrl
+import com.nevoit.cresto.feature.settings.util.SettingsManager
 
 class ShareExtractRepository(
     private val context: Context,
     private val todoRepository: TodoRepository,
     private val alarmScheduler: TodoAlarmScheduler,
-    private val aiTodoExtractor: AiTodoExtractor = AiTodoExtractor()
+    private val aiTodoExtractor: AiTodoExtractor = AiTodoExtractor {
+        SettingsManager.currentAiConfiguration()
+    }
 ) {
     suspend fun extractAndInsert(
         sharedText: String,

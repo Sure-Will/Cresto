@@ -10,6 +10,7 @@ class SettingsViewModel : ViewModel() {
     val isUseDynamicColor = SettingsManager.isUseDynamicColorState
     val isLiteMode = SettingsManager.isLiteModeState
     val isLiquidGlass = SettingsManager.isLiquidGlassState
+    val isStatusBarHidden = SettingsManager.isStatusBarHiddenState
     val themePrimaryColor = SettingsManager.themePrimaryColorState
     val isDueTodayMarker = SettingsManager.isDueTodayMarkerState
     val isOverdueMarker = SettingsManager.isOverdueMarkerState
@@ -39,6 +40,10 @@ class SettingsViewModel : ViewModel() {
 
     fun onLiquidGlassChanged(isEnabled: Boolean) {
         SettingsManager.isLiquidGlass = isEnabled
+    }
+
+    fun onStatusBarHiddenChanged(isEnabled: Boolean) {
+        SettingsManager.isStatusBarHidden = isEnabled
     }
 
     fun colorMode(mode: Int) {

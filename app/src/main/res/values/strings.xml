@@ -131,6 +131,21 @@
     <string name="save_settings">Save Settings</string>
     <string name="saved">Saved</string>
     <string name="test">Test</string>
+    <string name="test_ai_connection">Test AI Connection</string>
+    <string name="ai_connection_test_hint">Sends one minimal request using the current URL, API Key, and text model. Each test uses a small number of tokens.</string>
+    <string name="ai_connection_testing">Testing…</string>
+    <string name="ai_connection_success">Available · %1$d ms</string>
+    <string name="ai_connection_failed">Failed</string>
+    <string name="ai_connection_error_missing_api_key">Enter an API Key before testing.</string>
+    <string name="ai_connection_error_invalid_url">The URL is invalid. Check the protocol and address.</string>
+    <string name="ai_connection_error_authentication">Authentication failed. Check the API Key.</string>
+    <string name="ai_connection_error_endpoint_or_model">The endpoint or text model was not found. Check both values.</string>
+    <string name="ai_connection_error_rate_limited">The provider rejected the request because of rate limits or insufficient quota.</string>
+    <string name="ai_connection_error_timeout">The request timed out. Check the network or try again later.</string>
+    <string name="ai_connection_error_network">The provider could not be reached. Check the network and URL.</string>
+    <string name="ai_connection_error_incompatible_response">The provider responded, but its response is not compatible with OpenAI Chat Completions.</string>
+    <string name="ai_connection_error_provider_unavailable">The provider is temporarily unavailable. Try again later.</string>
+    <string name="ai_connection_error_unknown">The test failed. Check the current AI configuration and try again.</string>
     <string name="input">Input</string>
     <string name="response">Response</string>
     <string name="craft_your_unique_style_with_a_few_adorable_tweaks">Craft your unique style with a few adorable tweaks.</string>
@@ -140,6 +155,7 @@
     <string name="lite_mode">Lite Mode</string>
     <string name="design">Design</string>
     <string name="liquid_glass" translatable="false">Liquid Glass</string>
+    <string name="hide_status_bar">Hide Status Bar</string>
     <string name="clear">Clear</string>
     <string name="reset">Reset</string>
     <string name="manage_your_application_s_storage_footprint">Manage your application\'s storage footprint.</string>

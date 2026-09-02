@@ -377,9 +377,10 @@ fun GlasenseButtonToolBar(
     interactionSource: MutableInteractionSource,
     enabled: Boolean = true,
     shape: Shape = Capsule(),
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     colors: GlasenseButtonColors,
     animated: () -> Boolean = { true },
+    visualInset: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
@@ -406,16 +407,22 @@ fun GlasenseButtonToolBar(
                 transformOrigin = TransformOrigin.Center
             }
             .then(modifier)
-            .clip(shape)
-            // Handle click events.
-            .clickable(
-                enabled = enabled,
-                interactionSource = interactionSource,
-                onClick = { onClick() },
-                indication = null,
-                role = Role.Button
-            )
             .height(48.dp)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        enabled = enabled,
+                        interactionSource = interactionSource,
+                        onClick = onClick,
+                        indication = null,
+                        role = Role.Button
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(visualInset)
+            .clip(shape)
             .background(color = backgroundColor, shape = shape)
             // Draw a white flash overlay on press.
             .drawBehind {

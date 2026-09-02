@@ -11,13 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -60,9 +57,8 @@ import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.ui.components.glasense.FolderChipButton
 import com.nevoit.cresto.ui.components.glasense.GlasenseChipGroup
 import com.nevoit.cresto.ui.components.glasense.GlasenseMenuItem
-import com.nevoit.cresto.ui.components.glasense.GlasensePageHeader
 import com.nevoit.cresto.ui.components.glasense.SwipeableListState
-import com.nevoit.cresto.ui.components.glasense.isScrolledPast
+import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
 import com.nevoit.cresto.ui.components.glasense.rememberSwipeableListState
 import com.nevoit.cresto.ui.components.packed.PageContent
 import com.nevoit.glasense.component.paddingItem
@@ -95,11 +91,10 @@ fun BoxScope.HomeScreen(
     val homeTodos by viewModel.homeTodos.collectAsStateWithLifecycle()
     val homeGroups by viewModel.homeGroups.collectAsStateWithLifecycle()
     val selectedHomeGroupFilter by viewModel.homeGroupFilter.collectAsStateWithLifecycle()
+    val newTodoGroupId = (selectedHomeGroupFilter as? HomeGroupFilter.Group)?.id
     val selectedItemIds by viewModel.selectedItemIds.collectAsState()
     val isSelectionModeActive by viewModel.isSelectionModeActive.collectAsState()
     val isSearchBoxOpen by viewModel.isSearchBoxOpen.collectAsState()
-
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     // val colorMode = if (MaterialTheme.colorScheme.background == Color.White) true else false
 
@@ -117,7 +112,6 @@ fun BoxScope.HomeScreen(
         }
     }
 
-    val isSmallTitleVisible by lazyListState.isScrolledPast(if (isSearchBoxOpen) 0.dp else statusBarHeight + 24.dp)
     val interactionSource = remember { MutableInteractionSource() }
     val menuItemsSort = rememberSortMenuItems()
 
@@ -151,8 +145,6 @@ fun BoxScope.HomeScreen(
             }
         }
     }
-    val newTodoGroupId = (selectedHomeGroupFilter as? HomeGroupFilter.Group)?.id
-
     val (pinnedTodos, incompleteTodos, completeTodos) = remember(
         homeTodos,
         currentSortOption,
@@ -234,24 +226,12 @@ fun BoxScope.HomeScreen(
         tabPadding = true,
         horizontalPadding = false
     ) {
-        if (isSearchBoxOpen) {
-            item(key = "top_padding") {
-                Box(
-                    modifier = Modifier
-                        .animateItem(placementSpec = Springs.crisp())
-                        .statusBarsPadding()
-                        .height(48.dp + 12.dp + 48.dp + 12.dp)
-                )
-            }
-        } else {
-            item(key = "title") {
-                GlasensePageHeader(
-                    modifier = Modifier
-                        .animateItem(placementSpec = Springs.crisp())
-                        .padding(horizontal = 12.dp),
-                    title = allTodosTitle
-                )
-            }
+        item(key = "top_padding") {
+            Spacer(
+                modifier = Modifier
+                    .animateItem(placementSpec = Springs.crisp())
+                    .mainPageTopContentSpacer()
+            )
         }
 
         item(key = "chips") {
@@ -431,7 +411,6 @@ fun BoxScope.HomeScreen(
         menuController = showMenu,
         menuItems = menuItemsSort,
         title = allTodosTitle,
-        isTitleVisible = isSmallTitleVisible,
         backdrop = backdrop,
         viewModel = viewModel,
         newTodoGroupId = newTodoGroupId

@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -70,8 +69,13 @@ import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonToolBar
 import com.nevoit.cresto.ui.components.glasense.GlasenseDynamicSmallTitle
-import com.nevoit.cresto.ui.components.glasense.GlasensePageHeader
-import com.nevoit.cresto.ui.components.glasense.isScrolledPast
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIcon
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIconOptics
+import com.nevoit.cresto.ui.components.glasense.MainPageActionTouchTargetSize
+import com.nevoit.cresto.ui.components.glasense.MainPageActionVisualInset
+import com.nevoit.cresto.ui.components.glasense.MainPageTitle
+import com.nevoit.cresto.ui.components.glasense.mainPageTopBarPlacement
+import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
 import com.nevoit.cresto.ui.components.packed.CardWithTitle
 import com.nevoit.cresto.ui.components.packed.PageContent
 import com.nevoit.glasense.component.paddingItem
@@ -92,8 +96,6 @@ fun BoxScope.InsightsScreen(viewModel: TodoViewModel) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     val lazyListState = rememberLazyListState()
-
-    val isSmallTitleVisible by lazyListState.isScrolledPast(statusBarHeight + 24.dp)
 
     val context = LocalContext.current
     val insights by viewModel.insights.collectAsStateWithLifecycle()
@@ -116,9 +118,7 @@ fun BoxScope.InsightsScreen(viewModel: TodoViewModel) {
         tabPadding = true
     ) {
         item {
-            GlasensePageHeader(
-                title = stringResource(R.string.insights)
-            )
+            Spacer(modifier = Modifier.mainPageTopContentSpacer())
         }
         item {
             Row {
@@ -142,21 +142,20 @@ fun BoxScope.InsightsScreen(viewModel: TodoViewModel) {
         paddingItem(lazyListState)
     }
     GlasenseDynamicSmallTitle(
-        modifier = Modifier.align(Alignment.TopCenter),
-        title = stringResource(R.string.insights),
-        statusBarHeight = statusBarHeight,
-        isVisible = isSmallTitleVisible,
-        backdrop = backdrop
-    ) {
-    }
-    Box(
         modifier = Modifier
             .align(Alignment.TopCenter)
-            .statusBarsPadding()
-            .fillMaxWidth()
-            .height(48.dp)
-            .padding(horizontal = 12.dp)
+            .mainPageTopBarPlacement(),
+        title = null,
+        statusBarHeight = statusBarHeight,
+        isVisible = true,
+        backdrop = backdrop
     ) {
+        MainPageTitle(
+            title = stringResource(R.string.insights),
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(end = 64.dp)
+        )
         GlasenseButtonToolBar(
             enabled = true,
             shape = CircleShape,
@@ -166,19 +165,19 @@ fun BoxScope.InsightsScreen(viewModel: TodoViewModel) {
                 )
             },
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(48.dp),
+                .align(Alignment.CenterEnd)
+                .size(MainPageActionTouchTargetSize),
             colors = AppButtonColors.action(),
-            interactionSource = remember { MutableInteractionSource() }
+            interactionSource = remember { MutableInteractionSource() },
+            visualInset = MainPageActionVisualInset
         ) {
-            Icon(
+            MainPageActionIcon(
                 painter = painterResource(id = R.drawable.ic_gear),
                 contentDescription = stringResource(R.string.settings),
-                modifier = Modifier.width(32.dp)
+                optics = MainPageActionIconOptics.Settings
             )
         }
     }
-
 }
 
 @Composable

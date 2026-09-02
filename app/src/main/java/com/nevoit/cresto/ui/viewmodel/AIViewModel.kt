@@ -2,8 +2,9 @@ package com.nevoit.cresto.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nevoit.cresto.data.ai.AiTodoExtractor
 import com.nevoit.cresto.data.utils.EventResponse
-import com.nevoit.cresto.feature.screenextract.AiTodoExtractor
+import com.nevoit.cresto.feature.settings.util.SettingsManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,9 @@ sealed interface AiSideEffect {
 }
 
 class AiViewModel(
-    private val aiTodoExtractor: AiTodoExtractor = AiTodoExtractor()
+    private val aiTodoExtractor: AiTodoExtractor = AiTodoExtractor {
+        SettingsManager.currentAiConfiguration()
+    }
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Initial)

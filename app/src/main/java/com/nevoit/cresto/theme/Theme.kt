@@ -2,15 +2,27 @@ package com.nevoit.cresto.theme
 
 import android.app.Activity
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nevoit.cresto.feature.settings.util.SettingsManager
 import com.nevoit.cresto.feature.settings.util.SettingsViewModel
@@ -120,6 +132,7 @@ fun GlasenseTheme(
     val customPrimaryEnabled = settingsViewModel.isCustomPrimaryColorEnabled.value
     val themePrimaryColorArgb = settingsViewModel.themePrimaryColor.intValue
     val liquidGlass = settingsViewModel.isLiquidGlass.value
+    val isStatusBarHidden = settingsViewModel.isStatusBarHidden.value
 
     val systemInDark = isSystemInDarkTheme()
 
@@ -163,6 +176,17 @@ fun GlasenseTheme(
     }
 
     val view = LocalView.current
+    val density = LocalDensity.current
+    val hiddenStatusBarTopPadding = with(density) {
+        resolveHiddenStatusBarTopInsetPx(
+            isStatusBarHidden = isStatusBarHidden,
+            visibleStatusBarInsetPx = WindowInsets.statusBars.getTop(density),
+            statusBarInsetIgnoringVisibilityPx =
+                WindowInsets.statusBarsIgnoringVisibility.getTop(density),
+            displayCutoutInsetPx = WindowInsets.displayCutout.getTop(density)
+        ).toDp()
+    }
+
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
@@ -170,6 +194,13 @@ fun GlasenseTheme(
             val windowInsetsController = WindowCompat.getInsetsController(window, view)
 
             windowInsetsController.isAppearanceLightStatusBars = !useDarkTheme
+            windowInsetsController.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            if (isStatusBarHidden) {
+                windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            } else {
+                windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
+            }
         }
     }
 
@@ -181,7 +212,19 @@ fun GlasenseTheme(
         CompositionLocalProvider(
             LocalGlasenseSettings provides glasenseSettings
         ) {
-            content()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(GlasenseTheme.colors.pageBackground)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = hiddenStatusBarTopPadding)
+                ) {
+                    content()
+                }
+            }
         }
     }
 }

@@ -34,6 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nevoit.cresto.R
+import com.nevoit.cresto.feature.settings.util.AIConnectionTestFailure
+import com.nevoit.cresto.feature.settings.util.AIConnectionTestState
 import com.nevoit.cresto.feature.settings.util.AISettingsViewModel
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
@@ -83,6 +85,7 @@ fun AIScreen(aiSettingsViewModel: AISettingsViewModel = viewModel()) {
     val apiKey by aiSettingsViewModel.apiKey
     val textModel by aiSettingsViewModel.textModel
     val multimodalModel by aiSettingsViewModel.multimodalModel
+    val connectionTestState by aiSettingsViewModel.connectionTestState
 
     val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
@@ -188,6 +191,43 @@ fun AIScreen(aiSettingsViewModel: AISettingsViewModel = viewModel()) {
                 )
                 VGap(24.dp)
             }
+            Section(
+                footer = {
+                    when (val state = connectionTestState) {
+                        is AIConnectionTestState.Failure -> state.reason.localizedMessage()
+                        else -> stringResource(R.string.ai_connection_test_hint)
+                    }
+                }
+            ) {
+                Row(
+                    enabled = connectionTestState !is AIConnectionTestState.Testing,
+                    onClick = aiSettingsViewModel::testConnection,
+                    trailing = {
+                        Text(
+                            when (val state = connectionTestState) {
+                                AIConnectionTestState.Idle -> stringResource(R.string.test)
+                                AIConnectionTestState.Testing -> {
+                                    stringResource(R.string.ai_connection_testing)
+                                }
+
+                                is AIConnectionTestState.Success -> {
+                                    stringResource(
+                                        R.string.ai_connection_success,
+                                        state.latencyMillis
+                                    )
+                                }
+
+                                is AIConnectionTestState.Failure -> {
+                                    stringResource(R.string.ai_connection_failed)
+                                }
+                            }
+                        )
+                    }
+                ) {
+                    Text(stringResource(R.string.test_ai_connection))
+                }
+            }
+            item { VGap() }
             Section() {
                 Row(
                     destructive = true,
@@ -227,4 +267,28 @@ fun AIScreen(aiSettingsViewModel: AISettingsViewModel = viewModel()) {
             )
         }
     }
+}
+
+@Composable
+private fun AIConnectionTestFailure.localizedMessage(): String {
+    return stringResource(
+        when (this) {
+            AIConnectionTestFailure.MissingApiKey -> R.string.ai_connection_error_missing_api_key
+            AIConnectionTestFailure.InvalidUrl -> R.string.ai_connection_error_invalid_url
+            AIConnectionTestFailure.Authentication -> R.string.ai_connection_error_authentication
+            AIConnectionTestFailure.EndpointOrModel -> R.string.ai_connection_error_endpoint_or_model
+            AIConnectionTestFailure.RateLimited -> R.string.ai_connection_error_rate_limited
+            AIConnectionTestFailure.Timeout -> R.string.ai_connection_error_timeout
+            AIConnectionTestFailure.Network -> R.string.ai_connection_error_network
+            AIConnectionTestFailure.IncompatibleResponse -> {
+                R.string.ai_connection_error_incompatible_response
+            }
+
+            AIConnectionTestFailure.ProviderUnavailable -> {
+                R.string.ai_connection_error_provider_unavailable
+            }
+
+            AIConnectionTestFailure.Unknown -> R.string.ai_connection_error_unknown
+        }
+    )
 }

@@ -34,7 +34,7 @@ AI settings live in `Settings > AI`:
 - Text processing model
 - Multimodal model
 
-The default endpoint is BigModel's chat completions API, and the default model is `glm-4-flash`. Other compatible chat-completions-style endpoints can be used if they support the same text and image message format.
+The default OpenAI-compatible base URL is `https://api.deepseek.com`, and both text and multimodal extraction use `deepseek-v4-flash-vision-exp`. Other compatible chat-completions-style endpoints can be used if they support the same text and image message format.
 
 Current-screen extraction requires Shizuku because Cresto captures the screen through Shizuku-powered shell access. Enable the feature in `Settings > General`, grant Shizuku permission, then add the `Extract Screen` tile from Android Quick Settings.
 
@@ -51,7 +51,7 @@ Cresto requests only the permissions needed by optional features:
 
 ## Tech Stack
 
-- Kotlin 2.3.x and Java 17
+- Kotlin 2.4.10 and Java 17
 - Jetpack Compose
 - Room for local todo storage
 - Shizuku API for current-screen extraction

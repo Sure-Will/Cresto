@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -134,9 +135,11 @@ fun BottomSheet(
     var isReturningFromAdvanced by remember { mutableStateOf(false) }
     val basicFocusRequester = remember { FocusRequester() }
 
-    val bottomSheetHeight =
-        windowInfo.containerDpSize.height - WindowInsets.statusBars.asPaddingValues()
-            .calculateTopPadding()
+    val topSafeInset = maxOf(
+        WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding(),
+        WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    )
+    val bottomSheetHeight = windowInfo.containerDpSize.height - topSafeInset
     val bottomSheetHeightPx = with(density) { bottomSheetHeight.toPx() }
     var innerHeightPx by remember { mutableIntStateOf(0) }
 

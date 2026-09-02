@@ -1,9 +1,10 @@
-package com.nevoit.cresto.feature.screenextract
+package com.nevoit.cresto.data.ai
 
 import com.nevoit.cresto.data.utils.EventResponse
-import com.nevoit.cresto.feature.settings.util.SettingsManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -16,12 +17,41 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.LocalDateTime
 
-class AiTodoExtractor {
+data class AiConnectionTestResult(
+    val latencyMillis: Long
+)
+
+data class AiConfiguration(
+    val apiUrl: String,
+    val apiKey: String,
+    val textModel: String,
+    val multimodalModel: String
+)
+
+fun interface AiConfigurationProvider {
+    fun current(): AiConfiguration
+}
+
+sealed class AiRequestException(message: String) : IllegalStateException(message) {
+    data object MissingApiKey : AiRequestException("请先在设置中填写 API Key")
+
+    class HttpStatus(val statusCode: Int) :
+        AiRequestException("请求失败($statusCode)")
+
+    data object IncompatibleResponse : AiRequestException("模型返回了空内容")
+
+    data object ResponseTooLarge : AiRequestException("模型响应内容过大")
+}
+
+class AiTodoExtractor(
+    private val configurationProvider: AiConfigurationProvider? = null
+) {
 
     @Serializable
     private data class BigModelMessage(
@@ -33,7 +63,9 @@ class AiTodoExtractor {
     private data class BigModelRequest(
         val model: String,
         val messages: List<BigModelMessage>,
-        val temperature: Double = 0.1
+        val temperature: Double = 0.1,
+        @SerialName("max_tokens")
+        val maxTokens: Int? = null
     )
 
     @Serializable
@@ -49,9 +81,10 @@ class AiTodoExtractor {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun extractFromText(prompt: String): EventResponse = withContext(Dispatchers.IO) {
-        val apiKey = SettingsManager.aiApiKey.trim()
-        val endpoint = resolveEndpoint(SettingsManager.aiApiUrl.trim())
-        val model = SettingsManager.aiTextModel.trim().ifEmpty { DEFAULT_AI_MODEL }
+        val configuration = requireConfiguration()
+        val apiKey = configuration.apiKey.trim()
+        val endpoint = resolveEndpoint(configuration.apiUrl.trim())
+        val model = configuration.textModel.trim().ifEmpty { DEFAULT_AI_MODEL }
 
         if (apiKey.isBlank()) {
             throw IllegalStateException("请先在设置中填写 API Key")
@@ -80,9 +113,10 @@ class AiTodoExtractor {
         imageDataUrl: String,
         prompt: String = "请提取图片中的待办事项"
     ): EventResponse = withContext(Dispatchers.IO) {
-        val apiKey = SettingsManager.aiApiKey.trim()
-        val endpoint = resolveEndpoint(SettingsManager.aiApiUrl.trim())
-        val model = SettingsManager.aiMultimodalModel.trim().ifEmpty { DEFAULT_AI_MODEL }
+        val configuration = requireConfiguration()
+        val apiKey = configuration.apiKey.trim()
+        val endpoint = resolveEndpoint(configuration.apiUrl.trim())
+        val model = configuration.multimodalModel.trim().ifEmpty { DEFAULT_AI_MODEL }
 
         if (apiKey.isBlank()) {
             throw IllegalStateException("请先在设置中填写 API Key")
@@ -122,6 +156,43 @@ class AiTodoExtractor {
             )
         )
         parseAssistantResponse(rawResponseText)
+    }
+
+    suspend fun testConnection(
+        apiUrl: String,
+        apiKey: String,
+        model: String
+    ): AiConnectionTestResult = withContext(Dispatchers.IO) {
+        val normalizedApiKey = apiKey.trim()
+        val endpoint = resolveEndpoint(apiUrl.trim())
+        val normalizedModel = model.trim().ifEmpty { DEFAULT_AI_MODEL }
+
+        if (normalizedApiKey.isBlank()) {
+            throw AiRequestException.MissingApiKey
+        }
+
+        val startedAt = System.nanoTime()
+        val rawResponseText = requestBigModel(
+            endpoint = endpoint,
+            apiKey = normalizedApiKey,
+            model = normalizedModel,
+            maxOutputTokens = MAX_CONNECTION_TEST_OUTPUT_TOKENS,
+            maxResponseBytes = MAX_CONNECTION_TEST_RESPONSE_BYTES,
+            messages = listOf(
+                BigModelMessage(
+                    role = "user",
+                    content = JsonPrimitive("Reply with OK only.")
+                )
+            )
+        )
+        val assistantText = extractAssistantContent(rawResponseText)
+        if (assistantText.isBlank()) {
+            throw AiRequestException.IncompatibleResponse
+        }
+
+        AiConnectionTestResult(
+            latencyMillis = ((System.nanoTime() - startedAt) / 1_000_000L).coerceAtLeast(1L)
+        )
     }
 
     private fun parseAssistantResponse(rawResponseText: String): EventResponse {
@@ -275,7 +346,7 @@ class AiTodoExtractor {
     }
 
     private fun resolveEndpoint(rawUrl: String): String {
-        val defaultEndpoint = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+        val defaultEndpoint = "https://api.deepseek.com/v1/chat/completions"
         if (rawUrl.isBlank()) return defaultEndpoint
 
         val normalized = rawUrl.trim().trimEnd('/')
@@ -286,50 +357,91 @@ class AiTodoExtractor {
         }
     }
 
-    private fun requestBigModel(
+    private fun requireConfiguration(): AiConfiguration =
+        requireNotNull(configurationProvider) {
+            "AI extraction requires a configuration provider"
+        }.current()
+
+    private suspend fun requestBigModel(
         endpoint: String,
         apiKey: String,
         model: String,
-        messages: List<BigModelMessage>
-    ): String {
+        messages: List<BigModelMessage>,
+        maxOutputTokens: Int? = null,
+        maxResponseBytes: Int = MAX_AI_RESPONSE_BYTES
+    ): String = suspendCancellableCoroutine { continuation ->
         val requestBody = json.encodeToString(
             BigModelRequest(
                 model = model,
-                messages = messages
+                messages = messages,
+                maxTokens = maxOutputTokens
             )
         )
 
-        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            connectTimeout = 15_000
-            readTimeout = 30_000
-            doOutput = true
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("Authorization", "Bearer $apiKey")
+        val connection = try {
+            (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = 15_000
+                readTimeout = 30_000
+                doOutput = true
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Authorization", "Bearer $apiKey")
+            }
+        } catch (error: Throwable) {
+            continuation.resumeWith(Result.failure(error))
+            return@suspendCancellableCoroutine
         }
 
-        return try {
+        continuation.invokeOnCancellation {
+            connection.disconnect()
+        }
+
+        try {
             connection.outputStream.use { output ->
                 output.write(requestBody.toByteArray(Charsets.UTF_8))
             }
 
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-            val text = stream.readAllText()
+            val text = stream.readAllText(maxResponseBytes)
 
             if (code !in 200..299) {
-                throw IllegalStateException("请求失败($code): $text")
+                throw AiRequestException.HttpStatus(code)
             }
 
-            text
+            if (continuation.isActive) {
+                continuation.resumeWith(Result.success(text))
+            }
+        } catch (error: Throwable) {
+            if (continuation.isActive) {
+                continuation.resumeWith(Result.failure(error))
+            }
         } finally {
             connection.disconnect()
         }
     }
 
-    private fun InputStream?.readAllText(): String {
+    private fun InputStream?.readAllText(maxBytes: Int): String {
         if (this == null) return ""
-        return bufferedReader().use { it.readText() }
+
+        return use { input ->
+            val output = ByteArrayOutputStream(minOf(maxBytes, RESPONSE_BUFFER_BYTES))
+            val buffer = ByteArray(RESPONSE_BUFFER_BYTES)
+            var totalBytes = 0
+
+            while (true) {
+                val bytesRead = input.read(buffer)
+                if (bytesRead < 0) break
+                if (totalBytes + bytesRead > maxBytes) {
+                    throw AiRequestException.ResponseTooLarge
+                }
+
+                output.write(buffer, 0, bytesRead)
+                totalBytes += bytesRead
+            }
+
+            output.toString(Charsets.UTF_8.name())
+        }
     }
 
     private fun extractAssistantContent(rawResponse: String): String {
@@ -339,6 +451,10 @@ class AiTodoExtractor {
     }
 
     private companion object {
-        const val DEFAULT_AI_MODEL = "glm-4-flash"
+        const val DEFAULT_AI_MODEL = "deepseek-v4-flash-vision-exp"
+        const val MAX_CONNECTION_TEST_OUTPUT_TOKENS = 8
+        const val MAX_CONNECTION_TEST_RESPONSE_BYTES = 64 * 1024
+        const val MAX_AI_RESPONSE_BYTES = 1024 * 1024
+        const val RESPONSE_BUFFER_BYTES = 8 * 1024
     }
 }

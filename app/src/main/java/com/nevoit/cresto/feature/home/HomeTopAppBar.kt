@@ -3,15 +3,16 @@ package com.nevoit.cresto.feature.home
 import android.graphics.BlurMaskFilter
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -61,6 +61,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,7 +88,15 @@ import com.nevoit.cresto.ui.components.glasense.GlasenseButtonAdaptable
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonToolBar
 import com.nevoit.cresto.ui.components.glasense.GlasenseDynamicSmallTitle
 import com.nevoit.cresto.ui.components.glasense.GlasenseMenuItem
+import com.nevoit.cresto.ui.components.glasense.MainPageActionButtonSize
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIcon
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIconOptics
+import com.nevoit.cresto.ui.components.glasense.MainPageActionTouchTargetSize
+import com.nevoit.cresto.ui.components.glasense.MainPageActionVisualInset
+import com.nevoit.cresto.ui.components.glasense.MainPageTitle
 import com.nevoit.cresto.ui.components.glasense.glasenseHighlight
+import com.nevoit.cresto.ui.components.glasense.mainPageTopBarFrame
+import com.nevoit.cresto.ui.components.glasense.mainPageTopBarPlacement
 import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
 import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
@@ -97,7 +109,6 @@ fun BoxScope.HomeTopAppBar(
     menuController: (anchorBounds: Rect, items: List<GlasenseMenuItem>) -> Unit,
     menuItems: List<GlasenseMenuItem>,
     title: String,
-    isTitleVisible: Boolean,
     backdrop: Backdrop,
     viewModel: TodoViewModel,
     newTodoGroupId: Int?
@@ -137,15 +148,10 @@ fun BoxScope.HomeTopAppBar(
             isComposed = false
         }
     }
-    val resolvedTitle = if (isTitleVisible) {
-        if (isSelectionModeActive) stringResource(
-            R.string.selected_todos,
-            lastNonZeroSelected
-        ) else title
-    } else if (isComposed) stringResource(
+    val resolvedSelectionTitle = stringResource(
         R.string.selected_todos,
         lastNonZeroSelected
-    ) else title
+    )
 
     val darkTheme = isAppInDarkTheme()
 
@@ -160,11 +166,6 @@ fun BoxScope.HomeTopAppBar(
     }
     val shadowBaseColor = if (darkTheme) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(
         alpha = 0.1f
-    )
-
-    val alphaAni by animateFloatAsState(
-        targetValue = if (isTitleVisible) 1f else 0f,
-        animationSpec = tween(300)
     )
 
     val hapticController = LocalHapticFeedback.current
@@ -197,32 +198,32 @@ fun BoxScope.HomeTopAppBar(
     }
 
     GlasenseDynamicSmallTitle(
-        modifier = Modifier.align(Alignment.TopCenter),
-        title = resolvedTitle,
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .mainPageTopBarPlacement(),
+        title = if (isComposed) resolvedSelectionTitle else null,
         textStyle = TextStyle(fontFeatureSettings = "tnum"),
         statusBarHeight = statusBarHeight,
-        isVisible = if (isSelectionModeActive) true else isTitleVisible,
+        isVisible = true,
         backdrop = backdrop,
         surfaceColor = AppColors.pageBackground
     ) {
         var coordinatesCaptured by remember { mutableStateOf<LayoutCoordinates?>(null) }
         val sharedInteractionSource = remember { MutableInteractionSource() }
+        val searchDescription = stringResource(R.string.search_all_todos)
+        val sortDescription = stringResource(R.string.sort)
+        val addDescription = stringResource(R.string.add_new_todo)
 
-        Box(
-            modifier = Modifier
-                .statusBarsPadding()
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             if (!isGone) {
-                GlasenseButtonToolBar(
-                    enabled = true,
-                    interactionSource = sharedInteractionSource,
-                    shape = Capsule(),
-                    onClick = {},
+                MainPageTitle(
+                    title = title,
                     modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(end = 164.dp)
                         .graphicsLayer {
-                            alpha = 1 - topBarAlphaAnimation.value
+                            alpha = (1 - topBarAlphaAnimation.value) *
+                                    (1 - searchBoxAlphaAnimation.value)
                             val blurRadius = targetBlurRadius - topBarBlurAnimation.value
                             renderEffect = if (blurRadius > 0f) {
                                 BlurEffect(
@@ -234,108 +235,167 @@ fun BoxScope.HomeTopAppBar(
                                 null
                             }
                         }
-                        .align(Alignment.TopStart),
-                    colors = AppButtonColors.action()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .height(48.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .width(48.dp * searchIconWidthAnimation.value)
-                                .wrapContentSize(
-                                    unbounded = true,
-                                    align = Alignment.CenterEnd
+                )
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = 1 - topBarAlphaAnimation.value
+                            alpha *= 1 - searchBoxAlphaAnimation.value
+                            val blurRadius = targetBlurRadius - topBarBlurAnimation.value
+                            renderEffect = if (blurRadius > 0f) {
+                                BlurEffect(
+                                    radiusX = blurRadius,
+                                    radiusY = blurRadius,
+                                    edgeTreatment = TileMode.Decal
                                 )
-                                .clickable(
-                                    interactionSource = sharedInteractionSource,
-                                    indication = null
-                                ) {
-                                    viewModel.openSearchBox()
-                                },
-                            contentAlignment = Alignment.Center
+                            } else {
+                                null
+                            }
+                        }
+                        .align(Alignment.CenterEnd)
+                        .height(MainPageActionTouchTargetSize)
+                        .width(
+                            MainPageActionButtonSize * searchIconWidthAnimation.value + 100.dp
+                        )
+                ) {
+                    GlasenseButtonToolBar(
+                        enabled = true,
+                        interactionSource = sharedInteractionSource,
+                        shape = Capsule(),
+                        onClick = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clearAndSetSemantics { },
+                        colors = AppButtonColors.action(),
+                        visualInset = MainPageActionVisualInset
+                    ) {
+                        Row(
+                            modifier = Modifier.height(MainPageActionButtonSize)
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_magnifying_glass),
-                                contentDescription = stringResource(R.string.search_all_todos),
+                            Box(
                                 modifier = Modifier
-                                    .padding(8.dp)
-                                    .graphicsLayer {
-                                        alpha = 1 - searchBoxAlphaAnimation.value
-                                        val blurRadius =
-                                            targetBlurRadius - searchBoxBlurAnimation.value
-                                        renderEffect = if (blurRadius > 0f) {
-                                            BlurEffect(
-                                                radiusX = blurRadius,
-                                                radiusY = blurRadius,
-                                                edgeTreatment = TileMode.Decal
-                                            )
-                                        } else {
-                                            null
+                                    .height(MainPageActionButtonSize)
+                                    .width(
+                                        MainPageActionButtonSize *
+                                                searchIconWidthAnimation.value
+                                    )
+                                    .wrapContentSize(
+                                        unbounded = true,
+                                        align = Alignment.CenterEnd
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MainPageActionIcon(
+                                    painter = painterResource(id = R.drawable.ic_magnifying_glass),
+                                    contentDescription = null,
+                                    optics = MainPageActionIconOptics.Search,
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            alpha = 1 - searchBoxAlphaAnimation.value
+                                            val blurRadius =
+                                                targetBlurRadius - searchBoxBlurAnimation.value
+                                            renderEffect = if (blurRadius > 0f) {
+                                                BlurEffect(
+                                                    radiusX = blurRadius,
+                                                    radiusY = blurRadius,
+                                                    edgeTreatment = TileMode.Decal
+                                                )
+                                            } else {
+                                                null
+                                            }
+                                        },
+                                    tint = AppColors.primary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Box(
+                                modifier = Modifier.size(MainPageActionButtonSize),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MainPageActionIcon(
+                                    painter = painterResource(id = R.drawable.ic_sort),
+                                    contentDescription = null,
+                                    optics = MainPageActionIconOptics.Sort,
+                                    tint = AppColors.primary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Box(
+                                modifier = Modifier.size(MainPageActionButtonSize),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MainPageActionIcon(
+                                    painter = painterResource(id = R.drawable.ic_add_large),
+                                    contentDescription = null,
+                                    optics = MainPageActionIconOptics.Add,
+                                    tint = AppColors.primary
+                                )
+                            }
+                        }
+                    }
+
+                    if (!isSearchBoxComposed && !isSelectionModeActive) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .height(MainPageActionTouchTargetSize)
+                                    .width(
+                                        MainPageActionTouchTargetSize *
+                                                searchIconWidthAnimation.value
+                                    )
+                                    .semantics {
+                                        contentDescription = searchDescription
+                                    }
+                                    .clickable(
+                                        interactionSource = sharedInteractionSource,
+                                        indication = null,
+                                        role = Role.Button
+                                    ) {
+                                        viewModel.openSearchBox()
+                                    }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(MainPageActionTouchTargetSize)
+                                    .onGloballyPositioned { coordinates ->
+                                        coordinatesCaptured = coordinates
+                                    }
+                                    .semantics {
+                                        contentDescription = sortDescription
+                                    }
+                                    .clickable(
+                                        interactionSource = sharedInteractionSource,
+                                        indication = null,
+                                        role = Role.Button
+                                    ) {
+                                        coordinatesCaptured?.let {
+                                            menuController(it.boundsInWindow(), menuItems)
                                         }
                                     }
-                                    .width(32.dp),
-                                tint = AppColors.primary
                             )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .width(48.dp)
-                                .onGloballyPositioned { coordinates ->
-                                    coordinatesCaptured = coordinates
-                                }
-                                .clickable(
-                                    interactionSource = sharedInteractionSource,
-                                    indication = null
-                                ) {
-                                    coordinatesCaptured?.let {
-                                        menuController(it.boundsInWindow(), menuItems)
+                            Box(
+                                modifier = Modifier
+                                    .size(MainPageActionTouchTargetSize)
+                                    .semantics {
+                                        contentDescription = addDescription
                                     }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_sort),
-                                contentDescription = stringResource(R.string.sort),
-                                modifier = Modifier.width(32.dp),
-                                tint = AppColors.primary
+                                    .clickable(
+                                        interactionSource = sharedInteractionSource,
+                                        indication = null,
+                                        role = Role.Button
+                                    ) {
+                                        viewModel.showBottomSheet(groupId = newTodoGroupId)
+                                    }
                             )
                         }
                     }
-                }
-                GlasenseButtonAdaptable(
-                    enabled = true,
-                    shape = CircleShape,
-                    onClick = { viewModel.showBottomSheet(groupId = newTodoGroupId) },
-                    modifier = Modifier
-                        .graphicsLayer {
-                            alpha = 1 - topBarAlphaAnimation.value
-                            val blurRadius = targetBlurRadius - topBarBlurAnimation.value
-                            renderEffect = if (blurRadius > 0f) {
-                                BlurEffect(
-                                    radiusX = blurRadius,
-                                    radiusY = blurRadius,
-                                    edgeTreatment = TileMode.Decal
-                                )
-                            } else {
-                                null
-                            }
-                        }
-                        .size(48.dp)
-                        .align(Alignment.TopEnd),
-                    colors = AppButtonColors.action(),
-                    width = { 48.dp },
-                    height = { 48.dp }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_add_large),
-                        contentDescription = stringResource(R.string.add_new_todo),
-                        modifier = Modifier.width(32.dp)
-                    )
                 }
             }
             if (isComposed) {
@@ -406,13 +466,10 @@ fun BoxScope.HomeTopAppBar(
         BackHandler { viewModel.onSearchCloseIconClick() }
         Box(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .statusBarsPadding()
-                .padding(top = 48.dp + 12.dp)
                 .fillMaxWidth()
-                .height(48.dp)
+                .mainPageTopBarFrame()
                 .drawBehind {
-                    val finalAlpha = alphaAni * searchBoxAlphaAnimation.value
+                    val finalAlpha = searchBoxAlphaAnimation.value
                     if (finalAlpha > 0f) {
                         val paintColor =
                             shadowBaseColor.copy(alpha = shadowBaseColor.alpha * finalAlpha)
@@ -495,9 +552,9 @@ fun BoxScope.HomeTopAppBar(
 
             Box(
                 modifier = Modifier
-                    .graphicsLayer {
-                        alpha = if (supportsRuntimeShaderEffect()) 1 - alphaAni else 1f
-                    }
+                .graphicsLayer {
+                    alpha = if (supportsRuntimeShaderEffect()) 0f else 1f
+                }
                     .background(color = AppColors.scrimNormal.compositeOver(AppColors.pageBackground))
                     .fillMaxSize()
             )

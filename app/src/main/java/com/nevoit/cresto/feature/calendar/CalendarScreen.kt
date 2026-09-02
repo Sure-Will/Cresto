@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -88,9 +89,16 @@ import com.nevoit.cresto.ui.components.CustomAnimatedVisibility
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonAdaptable
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonToolBar
 import com.nevoit.cresto.ui.components.glasense.GlasensePopup
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIcon
+import com.nevoit.cresto.ui.components.glasense.MainPageActionIconOptics
+import com.nevoit.cresto.ui.components.glasense.MainPageActionTouchTargetSize
+import com.nevoit.cresto.ui.components.glasense.MainPageActionVisualInset
+import com.nevoit.cresto.ui.components.glasense.MainPageTitle
 import com.nevoit.cresto.ui.components.glasense.PopupDirection
 import com.nevoit.cresto.ui.components.glasense.PopupState
 import com.nevoit.cresto.ui.components.glasense.rememberSwipeableListState
+import com.nevoit.cresto.ui.components.glasense.mainPageTopBarFrame
+import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
 import com.nevoit.cresto.ui.components.myFadeIn
 import com.nevoit.cresto.ui.components.myFadeOut
 import com.nevoit.cresto.ui.components.myScaleIn
@@ -123,7 +131,9 @@ fun CalendarScreen() {
         restore = { YearMonth.parse(it) }
     )
 
-    var selectedDate by rememberSaveable(stateSaver = localDateSaver) { mutableStateOf(LocalDate.now()) }
+    var selectedDate by rememberSaveable(stateSaver = localDateSaver) {
+        mutableStateOf(LocalDate.now())
+    }
     var displayMonth by rememberSaveable(stateSaver = yearMonthSaver) {
         mutableStateOf(
             YearMonth.from(
@@ -413,10 +423,8 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
         ) {
             Spacer(
                 Modifier
-                    .statusBarsPadding()
-                    .height(48.dp)
+                    .mainPageTopContentSpacer()
             )
-            VGap()
             WeekDaysIndicator()
             Spacer(Modifier.height(4.dp))
             MonthlyPagerCalendar(
@@ -434,13 +442,12 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
         if (!isGone) {
             Row(
                 modifier = Modifier
-                    .statusBarsPadding()
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .mainPageTopBarFrame(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = displayMonth.format(monthFormatter),
+                MainPageTitle(
+                    title = displayMonth.format(monthFormatter),
                     modifier = Modifier
                         .graphicsLayer {
                             alpha = 1 - topBarAlphaAnimation.value
@@ -464,7 +471,6 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
                                 )
                             )
                         }
-                        .padding(horizontal = 12.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -475,59 +481,44 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
                                 selectedDate = today
                                 displayMonth = YearMonth.from(today)
                             }
-                        },
-                    maxLines = 1,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                        }
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
-                val rightInteractionSource = remember { MutableInteractionSource() }
+
+                val addInteractionSource = remember { MutableInteractionSource() }
 
                 GlasenseButtonToolBar(
                     enabled = true,
-                    interactionSource = rightInteractionSource,
+                    interactionSource = addInteractionSource,
                     shape = Capsule(),
-                    onClick = {},
+                    onClick = {
+                        viewModel.showBottomSheet(date = selectedDate)
+                    },
+                    modifier = Modifier
+                        .size(MainPageActionTouchTargetSize)
+                        .graphicsLayer {
+                            alpha = 1 - topBarAlphaAnimation.value
+                            val blurRadius = targetBlurRadius - topBarBlurAnimation.value
+                            renderEffect = if (blurRadius > 0f) {
+                                BlurEffect(
+                                    radiusX = blurRadius,
+                                    radiusY = blurRadius,
+                                    edgeTreatment = TileMode.Decal
+                                )
+                            } else {
+                                null
+                            }
+                        },
                     colors = AppButtonColors.action(),
-                    modifier = Modifier.graphicsLayer {
-                        alpha = 1 - topBarAlphaAnimation.value
-                        val blurRadius = targetBlurRadius - topBarBlurAnimation.value
-                        renderEffect = if (blurRadius > 0f) {
-                            BlurEffect(
-                                radiusX = blurRadius,
-                                radiusY = blurRadius,
-                                edgeTreatment = TileMode.Decal
-                            )
-                        } else {
-                            null
-                        }
-                    }
+                    visualInset = MainPageActionVisualInset
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .height(48.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .width(48.dp)
-                                .clickable(
-                                    interactionSource = rightInteractionSource,
-                                    indication = null
-                                ) {
-                                    viewModel.showBottomSheet(date = selectedDate)
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_add_large),
-                                contentDescription = stringResource(R.string.add_new_todo),
-                                modifier = Modifier.width(32.dp),
-                                tint = AppColors.primary
-                            )
-                        }
-                    }
+                    MainPageActionIcon(
+                        painter = painterResource(id = R.drawable.ic_add_large),
+                        contentDescription = stringResource(R.string.add_new_todo),
+                        optics = MainPageActionIconOptics.Add,
+                        tint = AppColors.primary
+                    )
                 }
             }
         }
@@ -541,9 +532,8 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
 
             Box(
                 modifier = Modifier
-                    .statusBarsPadding()
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+                    .mainPageTopBarFrame()
             ) {
                 GlasenseButtonAdaptable(
                     width = { 48.dp },

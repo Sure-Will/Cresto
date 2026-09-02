@@ -131,6 +131,7 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
     var isUseDynamicColorScheme by settingsViewModel.isUseDynamicColor
     var isLiteMode by settingsViewModel.isLiteMode
     var isLiquidGlass by settingsViewModel.isLiquidGlass
+    var isStatusBarHidden by settingsViewModel.isStatusBarHidden
     val currentMode by settingsViewModel.colorMode
     val currentThemePrimaryColor by settingsViewModel.themePrimaryColor
     val currentAppIcon by settingsViewModel.appIcon
@@ -259,6 +260,21 @@ fun AppearanceScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                         checked = isLiquidGlass,
                         onCheckedChange = { settingsViewModel.onLiquidGlassChanged(it) }) {
                         Text(stringResource(R.string.liquid_glass))
+                    }
+                }
+                Section(topSpacing = 12.dp) {
+                    CustomSwitchRow(
+                        checked = isStatusBarHidden,
+                        onCheckedChange = { settingsViewModel.onStatusBarHiddenChanged(it) }) {
+                        Text(stringResource(R.string.hide_status_bar))
+                    }
+                }
+            } else {
+                Section(header = { stringResource(R.string.design) }) {
+                    CustomSwitchRow(
+                        checked = isStatusBarHidden,
+                        onCheckedChange = { settingsViewModel.onStatusBarHiddenChanged(it) }) {
+                        Text(stringResource(R.string.hide_status_bar))
                     }
                 }
             }

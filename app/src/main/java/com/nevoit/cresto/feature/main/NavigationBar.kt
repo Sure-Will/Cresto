@@ -59,7 +59,7 @@ internal fun BoxScope.NavigationBar(
                 contentDescription = stringResource(R.string.todos)
             )
         }
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         GlasenseNavigationButton(
             modifier = Modifier.weight(1f),
             isActive = currentRoute == Screen.Star.route,
@@ -76,7 +76,7 @@ internal fun BoxScope.NavigationBar(
                 contentDescription = stringResource(R.string.calendar_view)
             )
         }
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         GlasenseNavigationButton(
             modifier = Modifier.weight(1f),
             isActive = currentRoute == Screen.Settings.route,

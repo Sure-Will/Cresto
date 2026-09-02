@@ -3,6 +3,7 @@ package com.nevoit.cresto.feature.settings.util
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.toArgb
+import com.nevoit.cresto.data.ai.AiConfiguration
 import com.nevoit.glasense.theme.tokens.Blue500
 import com.tencent.mmkv.MMKV
 
@@ -20,6 +21,7 @@ object SettingsManager {
     private const val KEY_USE_DYNAMIC_COLOR = "use_dynamic_color_enabled"
     private const val KEY_LITE_MODE = "lite_mode_enabled"
     private const val KEY_LIQUID_GLASS = "liquid_glass_enabled"
+    private const val KEY_HIDE_STATUS_BAR = "hide_status_bar_enabled"
     private const val KEY_COLOR_MODE = "color_mode"
     private const val KEY_IS_FIRST_RUN = "is_first_run"
     private const val KEY_SORT_OPTION = "sort_option"
@@ -39,8 +41,8 @@ object SettingsManager {
     private const val KEY_AUTO_ADD_TO_SYSTEM_CALENDAR = "auto_add_to_system_calendar"
     private const val KEY_CHECK_UPDATES_ON_STARTUP = "check_updates_on_startup"
     private const val KEY_LAST_UPDATE_CHECK_AT = "last_update_check_at"
-    private const val DEFAULT_AI_API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-    private const val DEFAULT_AI_MODEL = "glm-4-flash"
+    private const val DEFAULT_AI_API_URL = "https://api.deepseek.com"
+    private const val DEFAULT_AI_MODEL = "deepseek-v4-flash-vision-exp"
     private const val KEY_APP_ICON = "app_icon"
 
     private val defaultThemePrimaryColor = Blue500.toArgb()
@@ -55,6 +57,7 @@ object SettingsManager {
     val isUseDynamicColorState = mutableStateOf(mmkv.decodeBool(KEY_USE_DYNAMIC_COLOR, false))
     val isLiteModeState = mutableStateOf(mmkv.decodeBool(KEY_LITE_MODE, false))
     val isLiquidGlassState = mutableStateOf(mmkv.decodeBool(KEY_LIQUID_GLASS, false))
+    val isStatusBarHiddenState = mutableStateOf(mmkv.decodeBool(KEY_HIDE_STATUS_BAR, false))
     val sortOptionState =
         mutableIntStateOf(mmkv.decodeInt(KEY_SORT_OPTION, SortOption.DEFAULT.ordinal))
     val sortOrderState =
@@ -121,6 +124,13 @@ object SettingsManager {
         set(value) {
             mmkv.encode(KEY_LIQUID_GLASS, value)
             isLiquidGlassState.value = value
+        }
+
+    var isStatusBarHidden: Boolean
+        get() = mmkv.decodeBool(KEY_HIDE_STATUS_BAR, false)
+        set(value) {
+            mmkv.encode(KEY_HIDE_STATUS_BAR, value)
+            isStatusBarHiddenState.value = value
         }
 
     var colorMode: Int
@@ -277,6 +287,13 @@ object SettingsManager {
             mmkv.encode(KEY_APP_ICON, value.name)
             appIconState.value = value
         }
+
+    fun currentAiConfiguration(): AiConfiguration = AiConfiguration(
+        apiUrl = aiApiUrl,
+        apiKey = aiApiKey,
+        textModel = aiTextModel,
+        multimodalModel = aiMultimodalModel
+    )
 
     fun resetAiSettingsToDefaults() {
         aiApiUrl = DEFAULT_AI_API_URL
