@@ -6,6 +6,7 @@ import com.nevoit.cresto.data.todo.TodoRepository
 import com.nevoit.cresto.data.todo.reminder.TodoAlarmScheduler
 import com.nevoit.cresto.data.utils.EventItem
 import com.nevoit.cresto.data.ai.AiTodoExtractor
+import com.nevoit.cresto.feature.screenextract.readImageBytesWithLimit
 import com.nevoit.cresto.feature.screenextract.toCompressedSharedImageDataUrl
 import com.nevoit.cresto.feature.settings.util.SettingsManager
 
@@ -66,7 +67,9 @@ class ShareExtractRepository(
 
         return imageUris.flatMap { uri ->
             onProgress(ShareExtractPhase.Reading)
-            val imageBytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            val imageBytes = context.contentResolver.openInputStream(uri)?.use {
+                it.readImageBytesWithLimit()
+            }
                 ?: throw IllegalArgumentException("无法读取分享图片")
             val imageDataUrl = imageBytes.toCompressedSharedImageDataUrl()
 

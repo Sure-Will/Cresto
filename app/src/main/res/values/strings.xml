@@ -36,6 +36,9 @@
     <string name="expand">Expand</string>
     <string name="selected_todos">%1$d Selected</string>
     <string name="search_all_todos">Search all todos</string>
+    <string name="search_todos">Search tasks</string>
+    <string name="clear_search">Clear search</string>
+    <string name="close_search">Close search</string>
     <string name="filter">Filter</string>
     <string name="add_new_todo">Add new todo</string>
     <string name="delete_selected_todo_s">Delete selected todo(s)</string>

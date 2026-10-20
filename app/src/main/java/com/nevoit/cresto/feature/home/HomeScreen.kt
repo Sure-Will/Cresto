@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -33,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -58,7 +57,7 @@ import com.nevoit.cresto.ui.components.glasense.FolderChipButton
 import com.nevoit.cresto.ui.components.glasense.GlasenseChipGroup
 import com.nevoit.cresto.ui.components.glasense.GlasenseMenuItem
 import com.nevoit.cresto.ui.components.glasense.SwipeableListState
-import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
+import com.nevoit.cresto.ui.components.glasense.mainPageTopContentPadding
 import com.nevoit.cresto.ui.components.glasense.rememberSwipeableListState
 import com.nevoit.cresto.ui.components.packed.PageContent
 import com.nevoit.glasense.component.paddingItem
@@ -222,18 +221,16 @@ fun BoxScope.HomeScreen(
 
     PageContent(
         state = lazyListState,
-        modifier = Modifier.layerBackdrop(backdrop),
+        modifier = Modifier
+            .padding(
+                top = mainPageTopContentPadding() +
+                        HomeListToolsHeight + HomeListToolsBottomSpacing
+            )
+            .clipToBounds()
+            .layerBackdrop(backdrop),
         tabPadding = true,
         horizontalPadding = false
     ) {
-        item(key = "top_padding") {
-            Spacer(
-                modifier = Modifier
-                    .animateItem(placementSpec = Springs.crisp())
-                    .mainPageTopContentSpacer()
-            )
-        }
-
         item(key = "chips") {
             Row(
                 modifier = Modifier

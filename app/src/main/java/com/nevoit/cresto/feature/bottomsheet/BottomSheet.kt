@@ -2,7 +2,6 @@ package com.nevoit.cresto.feature.bottomsheet
 
 import android.content.Context
 import android.net.Uri
-import android.util.Base64
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -61,6 +60,7 @@ import com.nevoit.cresto.data.todo.TodoViewModel
 import com.nevoit.cresto.feature.group.GroupBottomSheet
 import com.nevoit.cresto.feature.screenextract.AiExtractSource
 import com.nevoit.cresto.feature.screenextract.ScreenExtractEvents
+import com.nevoit.cresto.feature.screenextract.readCompressedImageDataUrl
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.ui.components.glasense.DialogItemData
 import com.nevoit.cresto.ui.components.glasense.GlasenseMenuItem
@@ -692,16 +692,9 @@ fun BottomSheet(
 }
 
 private fun Uri.toImageDataUrl(context: Context): String {
-    val resolver = context.contentResolver
-    val mime = resolver.getType(this) ?: "image/jpeg"
-    val bytes = resolver.openInputStream(this)?.use { it.readBytes() } ?: return ""
-
-    // Keep payload size bounded to reduce request failures on very large images.
-    val maxSizeBytes = 5 * 1024 * 1024
-    if (bytes.size > maxSizeBytes) return ""
-
-    val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-    return "data:$mime;base64,$base64"
+    return readCompressedImageDataUrl {
+        context.contentResolver.openInputStream(this)
+    }
 }
 
 @Composable

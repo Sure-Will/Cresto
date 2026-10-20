@@ -20,6 +20,7 @@ import kotlinx.serialization.json.putJsonObject
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.time.LocalDateTime
 
@@ -47,11 +48,30 @@ sealed class AiRequestException(message: String) : IllegalStateException(message
     data object IncompatibleResponse : AiRequestException("模型返回了空内容")
 
     data object ResponseTooLarge : AiRequestException("模型响应内容过大")
+
+    class Timeout(val stage: Stage) : AiRequestException("${stage.displayName}超时，请稍后重试") {
+        enum class Stage(val displayName: String) {
+            OpeningConnection("连接 AI 服务"),
+            UploadingRequest("上传请求"),
+            WaitingForResponse("等待模型响应"),
+            ReadingResponse("读取模型响应")
+        }
+
+        init {
+            initCause(SocketTimeoutException("timeout"))
+        }
+    }
 }
 
-class AiTodoExtractor(
-    private val configurationProvider: AiConfigurationProvider? = null
+class AiTodoExtractor internal constructor(
+    private val configurationProvider: AiConfigurationProvider?,
+    private val connectionFactory: (URL) -> HttpURLConnection
 ) {
+
+    constructor(configurationProvider: AiConfigurationProvider? = null) : this(
+        configurationProvider = configurationProvider,
+        connectionFactory = { url -> url.openConnection() as HttpURLConnection }
+    )
 
     @Serializable
     private data class BigModelMessage(
@@ -65,7 +85,20 @@ class AiTodoExtractor(
         val messages: List<BigModelMessage>,
         val temperature: Double = 0.1,
         @SerialName("max_tokens")
-        val maxTokens: Int? = null
+        val maxTokens: Int? = null,
+        @SerialName("response_format")
+        val responseFormat: ResponseFormat? = null,
+        val thinking: Thinking? = null
+    )
+
+    @Serializable
+    private data class ResponseFormat(
+        val type: String
+    )
+
+    @Serializable
+    private data class Thinking(
+        val type: String
     )
 
     @Serializable
@@ -147,6 +180,9 @@ class AiTodoExtractor(
             endpoint = endpoint,
             apiKey = apiKey,
             model = model,
+            requestDeepSeekJsonResponse = true,
+            disableDeepSeekThinking = true,
+            readTimeoutMillis = IMAGE_READ_TIMEOUT_MILLIS,
             messages = listOf(
                 BigModelMessage(
                     role = "system",
@@ -368,27 +404,55 @@ class AiTodoExtractor(
         model: String,
         messages: List<BigModelMessage>,
         maxOutputTokens: Int? = null,
-        maxResponseBytes: Int = MAX_AI_RESPONSE_BYTES
+        maxResponseBytes: Int = MAX_AI_RESPONSE_BYTES,
+        requestDeepSeekJsonResponse: Boolean = false,
+        disableDeepSeekThinking: Boolean = false,
+        readTimeoutMillis: Int = DEFAULT_READ_TIMEOUT_MILLIS
     ): String = suspendCancellableCoroutine { continuation ->
+        val endpointUrl = try {
+            URL(endpoint)
+        } catch (error: Throwable) {
+            continuation.resumeWith(
+                Result.failure(
+                    error.toSafeTimeout(AiRequestException.Timeout.Stage.OpeningConnection)
+                )
+            )
+            return@suspendCancellableCoroutine
+        }
+
         val requestBody = json.encodeToString(
             BigModelRequest(
                 model = model,
                 messages = messages,
-                maxTokens = maxOutputTokens
+                maxTokens = maxOutputTokens,
+                responseFormat = if (requestDeepSeekJsonResponse && endpointUrl.isDeepSeekApi()) {
+                    ResponseFormat(type = "json_object")
+                } else {
+                    null
+                },
+                thinking = if (disableDeepSeekThinking && endpointUrl.isDeepSeekApi()) {
+                    Thinking(type = "disabled")
+                } else {
+                    null
+                }
             )
         )
 
         val connection = try {
-            (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            connectionFactory(endpointUrl).apply {
                 requestMethod = "POST"
                 connectTimeout = 15_000
-                readTimeout = 30_000
+                readTimeout = readTimeoutMillis
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json")
                 setRequestProperty("Authorization", "Bearer $apiKey")
             }
         } catch (error: Throwable) {
-            continuation.resumeWith(Result.failure(error))
+            continuation.resumeWith(
+                Result.failure(
+                    error.toSafeTimeout(AiRequestException.Timeout.Stage.OpeningConnection)
+                )
+            )
             return@suspendCancellableCoroutine
         }
 
@@ -397,13 +461,27 @@ class AiTodoExtractor(
         }
 
         try {
-            connection.outputStream.use { output ->
-                output.write(requestBody.toByteArray(Charsets.UTF_8))
+            atRequestStage(AiRequestException.Timeout.Stage.OpeningConnection) {
+                connection.connect()
             }
 
-            val code = connection.responseCode
-            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-            val text = stream.readAllText(maxResponseBytes)
+            atRequestStage(AiRequestException.Timeout.Stage.UploadingRequest) {
+                connection.outputStream.use { output ->
+                    output.write(requestBody.toByteArray(Charsets.UTF_8))
+                }
+            }
+
+            val code = atRequestStage(AiRequestException.Timeout.Stage.WaitingForResponse) {
+                connection.responseCode
+            }
+            val text = atRequestStage(AiRequestException.Timeout.Stage.ReadingResponse) {
+                val stream = if (code in 200..299) {
+                    connection.inputStream
+                } else {
+                    connection.errorStream
+                }
+                stream.readAllText(maxResponseBytes)
+            }
 
             if (code !in 200..299) {
                 throw AiRequestException.HttpStatus(code)
@@ -419,6 +497,25 @@ class AiTodoExtractor(
         } finally {
             connection.disconnect()
         }
+    }
+
+    private inline fun <T> atRequestStage(
+        stage: AiRequestException.Timeout.Stage,
+        block: () -> T
+    ): T {
+        return try {
+            block()
+        } catch (error: Throwable) {
+            throw error.toSafeTimeout(stage)
+        }
+    }
+
+    private fun Throwable.toSafeTimeout(stage: AiRequestException.Timeout.Stage): Throwable {
+        return if (this is SocketTimeoutException) AiRequestException.Timeout(stage) else this
+    }
+
+    private fun URL.isDeepSeekApi(): Boolean {
+        return host.equals(DEEPSEEK_API_HOST, ignoreCase = true)
     }
 
     private fun InputStream?.readAllText(maxBytes: Int): String {
@@ -456,5 +553,8 @@ class AiTodoExtractor(
         const val MAX_CONNECTION_TEST_RESPONSE_BYTES = 64 * 1024
         const val MAX_AI_RESPONSE_BYTES = 1024 * 1024
         const val RESPONSE_BUFFER_BYTES = 8 * 1024
+        const val DEFAULT_READ_TIMEOUT_MILLIS = 30_000
+        const val IMAGE_READ_TIMEOUT_MILLIS = 90_000
+        const val DEEPSEEK_API_HOST = "api.deepseek.com"
     }
 }

@@ -1,8 +1,11 @@
 package com.nevoit.cresto.ui.components.glasense
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
@@ -19,15 +23,15 @@ import com.nevoit.glasense.theme.LocalGlasenseContentColor
 private val MainPageTopSpacing = 12.dp
 private val MainPageTopBarHeight = 48.dp
 private val MainPageTopBarBottomSpacing = 20.dp
-internal val MainPageActionButtonSize = 44.dp
+internal val MainPageActionButtonSize = 48.dp
 internal val MainPageActionTouchTargetSize = 48.dp
-internal val MainPageActionVisualInset = 2.dp
-private val MainPageActionIconFrameSize = 24.dp
+internal val MainPageActionVisualInset = 0.dp
+private val MainPageActionIconFrameSize = 32.dp
 
 enum class MainPageActionIconOptics(internal val scale: Float) {
     Search(1f),
-    Sort(0.86f),
-    Add(0.96f),
+    Sort(1f),
+    Add(1f),
     Settings(1f)
 }
 
@@ -42,6 +46,11 @@ fun Modifier.mainPageTopBarFrame(): Modifier =
 fun Modifier.mainPageTopContentSpacer(): Modifier =
     statusBarsPadding()
         .height(MainPageTopSpacing + MainPageTopBarHeight + MainPageTopBarBottomSpacing)
+
+@Composable
+fun mainPageTopContentPadding(): Dp =
+    WindowInsets.statusBars.asPaddingValues().calculateTopPadding() +
+            MainPageTopSpacing + MainPageTopBarHeight + MainPageTopBarBottomSpacing
 
 @Composable
 fun MainPageTitle(

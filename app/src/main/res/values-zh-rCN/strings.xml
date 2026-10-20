@@ -34,6 +34,9 @@
     <string name="expand">展开</string>
     <string name="selected_todos">已选择 %1$d 项</string>
     <string name="search_all_todos">在全部待办事项中搜索</string>
+    <string name="search_todos">搜索待办事项</string>
+    <string name="clear_search">清除搜索</string>
+    <string name="close_search">关闭搜索</string>
     <string name="filter">排序</string>
     <string name="add_new_todo">添加新待办事项</string>
     <string name="delete_selected_todo_s">删除选定的待办事项</string>
