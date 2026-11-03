@@ -5,8 +5,6 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
 import androidx.glance.appwidget.updateAll
@@ -16,11 +14,9 @@ import com.nevoit.cresto.feature.main.MainScreen
 import com.nevoit.cresto.feature.screenextract.ScreenExtractEvents
 import com.nevoit.cresto.feature.settings.util.SettingsManager
 import com.nevoit.cresto.feature.widget.TodayTodoWidget
-import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.GlasenseTheme
 import com.nevoit.cresto.util.NotificationPermissionCompat
-import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.core.utility.clearBackground
 import kotlinx.coroutines.launch
 
 private const val REQUEST_POST_NOTIFICATIONS = 1001
@@ -50,17 +46,10 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             GlasenseTheme {
-                val overscrollFactory = rememberOffsetOverscrollFactory()
-
-                CompositionLocalProvider(
-                    LocalOverscrollFactory provides overscrollFactory,
-                    LocalGlasenseContentColor provides AppColors.content //provide content color
-                ) {
-                    MainScreen()
-                }
+                MainScreen()
             }
         }
-        window.setBackgroundDrawable(null)
+        clearBackground()
     }
 
     override fun onNewIntent(intent: Intent) {

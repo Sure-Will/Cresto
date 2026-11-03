@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 
 private val MainPageTopSpacing = 12.dp
 private val MainPageTopBarHeight = 48.dp
@@ -72,7 +72,7 @@ fun MainPageActionIcon(
     contentDescription: String?,
     optics: MainPageActionIconOptics,
     modifier: Modifier = Modifier,
-    tint: Color = LocalGlasenseContentColor.current
+    tint: Color = LocalContentColor.current
 ) {
     Icon(
         painter = painter,

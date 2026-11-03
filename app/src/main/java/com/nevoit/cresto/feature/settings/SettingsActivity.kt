@@ -6,16 +6,12 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.view.WindowCompat
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.lifecycleScope
 import com.nevoit.cresto.feature.widget.TodayTodoWidget
-import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.GlasenseTheme
-import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.core.utility.clearBackground
 import kotlinx.coroutines.launch
 
 enum class SettingsDestination(val value: String) {
@@ -57,24 +53,18 @@ class SettingsActivity : AppCompatActivity() {
 
         setContent {
             GlasenseTheme {
-                val overscrollFactory = rememberOffsetOverscrollFactory()
-                CompositionLocalProvider(
-                    LocalOverscrollFactory provides overscrollFactory,
-                    LocalGlasenseContentColor provides AppColors.content
-                ) {
-                    when (destination) {
-                        SettingsDestination.SETTINGS -> SettingsScreen()
-                        SettingsDestination.APPEARANCE -> AppearanceScreen()
-                        SettingsDestination.AI -> AIScreen()
-                        SettingsDestination.DATA_STORAGE -> DataStorageScreen()
-                        SettingsDestination.GENERAL -> GeneralScreen()
-                        SettingsDestination.ABOUT -> AboutScreen()
-                        SettingsDestination.CREDITS -> CreditsScreen()
-                    }
+                when (destination) {
+                    SettingsDestination.SETTINGS -> SettingsScreen()
+                    SettingsDestination.APPEARANCE -> AppearanceScreen()
+                    SettingsDestination.AI -> AIScreen()
+                    SettingsDestination.DATA_STORAGE -> DataStorageScreen()
+                    SettingsDestination.GENERAL -> GeneralScreen()
+                    SettingsDestination.ABOUT -> AboutScreen()
+                    SettingsDestination.CREDITS -> CreditsScreen()
                 }
             }
         }
-        window.setBackgroundDrawable(null)
+        clearBackground()
     }
 
     override fun onStop() {

@@ -66,20 +66,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.drawPlainBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.effect
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.shapes.Capsule
 import com.nevoit.cresto.R
 import com.nevoit.cresto.data.todo.TodoViewModel
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.theme.isAppInDarkTheme
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonAdaptable
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonToolBar
@@ -93,11 +88,12 @@ import com.nevoit.cresto.ui.components.glasense.MainPageTitle
 import com.nevoit.cresto.ui.components.glasense.glasenseHighlight
 import com.nevoit.cresto.ui.components.glasense.mainPageTopBarPlacement
 import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.glass
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import kotlinx.coroutines.launch
 
 internal val HomeListToolsHeight = 48.dp
@@ -176,7 +172,7 @@ fun BoxScope.HomeTopAppBar(
 
     val materialEffect = rememberMaterialRenderEffectOrNull(MaterialRecipes.appBar())
 
-    val glass = LocalGlasenseSettings.current.liquidGlass
+    val glass = LocalThemeSettings.current.liquidGlass
 
     val cardBackground = AppColors.cardBackground
 
@@ -414,24 +410,36 @@ fun BoxScope.HomeTopAppBar(
                                 alpha = searchBoxAlphaAnimation.value
                             }
                             .then(
-                                if (supportsRuntimeShaderEffect()) Modifier.drawPlainBackdrop(
+                                if (supportsRuntimeShaderEffect()) if (!glass) Modifier
+                                    .drawPlainBackdrop(
+                                        backdrop = backdrop,
+                                        shape = { Capsule() },
+                                        effects = {
+                                            padding = 32.dp.toPx() * 2
+                                            materialEffect?.let { effect(it) }
+                                            blur(
+                                                radius = 32.dp.toPx(),
+                                                edgeTreatment = TileMode.Decal
+                                            )
+                                        },
+                                        onDrawSurface = {
+                                            drawRect(
+                                                cardBackground, alpha = 0.3f
+                                            )
+                                        }
+                                    ) else Modifier.glass(
                                     backdrop = backdrop,
-                                    shape = { Capsule() },
-                                    effects = {
-                                        padding = 32.dp.toPx() * 2
-                                        materialEffect?.let { effect(it) }
-                                        blur(
-                                            radius = if (glass) 8.dp.toPx() else 32.dp.toPx(),
-                                            edgeTreatment = TileMode.Decal
-                                        )
-                                        if (glass) lens(16f.dp.toPx(), 48f.dp.toPx())
-                                    },
+                                    shape = Capsule(),
+                                    materialEffect = materialEffect,
                                     onDrawSurface = {
                                         drawRect(
                                             cardBackground, alpha = 0.3f
                                         )
-                                    }
-                                ) else Modifier.clip(Capsule()))
+                                    })
+                                else Modifier.clip(
+                                    Capsule()
+                                )
+                            )
                     ) {
                         if (!glass) {
                             Box(
@@ -440,28 +448,6 @@ fun BoxScope.HomeTopAppBar(
                                     .fillMaxSize()
                             )
                         }
-                        if (glass) {
-                            Box(
-                                modifier = Modifier
-                                    .drawBackdrop(
-                                        backdrop = rememberLayerBackdrop { },
-                                        shape = { Capsule() },
-                                        shadow = null,
-                                        innerShadow = null,
-                                        highlight = {
-                                            Highlight.Default.copy(
-                                                style = HighlightStyle.Default(
-                                                    angle = 90f
-                                                )
-                                            )
-                                        },
-                                        effects = {
-
-                                        })
-                                    .fillMaxSize()
-                            )
-                        }
-
                         Box(
                             modifier = Modifier
                             .graphicsLayer {

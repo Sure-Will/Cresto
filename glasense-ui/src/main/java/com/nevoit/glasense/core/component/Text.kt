@@ -23,8 +23,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
-import com.nevoit.glasense.theme.LocalGlasenseTextStyle
+import com.nevoit.glasense.theme.local.LocalContentColor
+import com.nevoit.glasense.theme.local.LocalTextStyle
 
 @Composable
 fun Text(
@@ -45,11 +45,11 @@ fun Text(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
-    style: TextStyle = LocalGlasenseTextStyle.current,
+    style: TextStyle = LocalTextStyle.current,
 ) {
 
     val textColor =
-        color.takeOrElse { style.color.takeOrElse { LocalGlasenseContentColor.current } }
+        color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
 
     BasicText(
         text = text,
@@ -95,10 +95,10 @@ fun Text(
     minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     onTextLayout: (TextLayoutResult) -> Unit = {},
-    style: TextStyle = LocalGlasenseTextStyle.current,
+    style: TextStyle = LocalTextStyle.current,
 ) {
     val textColor =
-        color.takeOrElse { style.color.takeOrElse { LocalGlasenseContentColor.current } }
+        color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
     val linkStyles = rememberTextLinkStyles()
     val textWithMaterialLinkStyles =
         remember(text, linkStyles) { createTextWithLinkStyles(text, linkStyles) }

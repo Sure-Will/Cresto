@@ -13,12 +13,12 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 
 @Composable
 fun VDivider(
     modifier: Modifier = Modifier,
-    color: Color = LocalGlasenseContentColor.current.copy(.1f),
+    color: Color = LocalContentColor.current.copy(.1f),
     width: Dp = 1.dp,
     blendMode: BlendMode = BlendMode.SrcOver
 ) {
@@ -41,7 +41,7 @@ fun VDivider(
 @Composable
 fun HDivider(
     modifier: Modifier = Modifier,
-    color: Color = LocalGlasenseContentColor.current.copy(.1f),
+    color: Color = LocalContentColor.current.copy(.1f),
     width: Dp = 1.dp,
     blendMode: BlendMode = BlendMode.SrcOver
 ) {

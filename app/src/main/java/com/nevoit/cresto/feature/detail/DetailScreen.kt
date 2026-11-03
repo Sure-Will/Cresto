@@ -137,7 +137,7 @@ import com.nevoit.glasense.core.component.VDivider
 import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 import com.nevoit.glasense.theme.tokens.Springs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -538,7 +538,7 @@ fun DetailScreen(
                     }
                     item(key = "information") {
                         CompositionLocalProvider(
-                            LocalGlasenseContentColor provides AppColors.contentVariant
+                            LocalContentColor provides AppColors.contentVariant
                         ) {
                             Column(
                                 modifier = Modifier
@@ -917,6 +917,7 @@ fun DetailScreen(
                             val groupId = when (filter) {
                                 HomeGroupFilter.All,
                                 HomeGroupFilter.Ungrouped -> null
+
                                 is HomeGroupFilter.Group -> filter.id
                             }
                             viewModel.update(item.todoItem.copy(groupId = groupId))

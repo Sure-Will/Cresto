@@ -47,7 +47,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.glasense.component.Switch
 import com.nevoit.glasense.theme.GlasenseColors
 import kotlinx.coroutines.Job
@@ -88,7 +88,7 @@ fun GlasenseSwitch(
     colors: GlasenseColors = AppColors,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val liquidGlass = LocalGlasenseSettings.current.liquidGlass
+    val liquidGlass = LocalThemeSettings.current.liquidGlass
     if (liquidGlass) {
         val trackBackdrop = rememberLayerBackdrop {
             drawRect(backgroundColor)

@@ -67,7 +67,7 @@ import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -358,7 +358,7 @@ fun AddTodoSheet(
         }
         VGap()
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides AppColors.contentVariant
+            LocalContentColor provides AppColors.contentVariant
         ) {
             Column(
                 modifier = Modifier

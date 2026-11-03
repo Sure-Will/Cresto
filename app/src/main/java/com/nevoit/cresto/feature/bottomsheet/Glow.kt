@@ -40,7 +40,7 @@ import com.kyant.shapes.Capsule
 import com.nevoit.cresto.R
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.theme.defaultEnterTransition
 import com.nevoit.cresto.theme.defaultExitTransition
 import com.nevoit.cresto.theme.gradientColorsDark
@@ -53,13 +53,13 @@ import com.nevoit.cresto.ui.components.glasense.GlasenseButton
 import com.nevoit.cresto.ui.components.glasense.RotatingGlow
 import com.nevoit.cresto.ui.components.glasense.RotatingGlowBorder
 import com.nevoit.cresto.ui.components.glasense.glasenseHighlight
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.ui.viewmodel.AiViewModel
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.modifier.cachedClip
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.glasense.theme.GlasenseTheme
 
 @Composable
@@ -81,7 +81,7 @@ fun GlowContainer(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        if (!LocalGlasenseSettings.current.liteMode) {
+        if (!LocalThemeSettings.current.liteMode) {
             RotatingGlow(
                 modifier = Modifier
                     .height(64.dp)
@@ -100,14 +100,14 @@ fun GlowContainer(
                 .fillMaxWidth()
                 .cachedClip(Capsule())
                 .then(
-                    if (LocalGlasenseSettings.current.liteMode) {
+                    if (LocalThemeSettings.current.liteMode) {
                         Modifier.background(color = GlasenseTheme.colors.cardBackground)
                     } else {
                         Modifier
                     }
                 )
                 .then(
-                    if (LocalGlasenseSettings.current.liquidGlass) Modifier.drawBackdrop(
+                    if (LocalThemeSettings.current.liquidGlass) Modifier.drawBackdrop(
                         shape = { Capsule() },
                         backdrop = emptyBackdrop(),
                         shadow = null,
@@ -143,7 +143,7 @@ fun GlowContainer(
                         .background(color = GlasenseTheme.colors.cardBackground.copy(alpha = 0.5f))
                 )
             }
-            if (!LocalGlasenseSettings.current.liteMode) {
+            if (!LocalThemeSettings.current.liteMode) {
                 RotatingGlowBorder(
                     modifier = Modifier
                         .fillMaxSize()

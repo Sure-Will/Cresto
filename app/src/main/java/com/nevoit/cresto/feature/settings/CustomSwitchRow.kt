@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.ui.components.glasense.GlasenseSwitch
 import com.nevoit.glasense.component.ListRowScope
 import com.nevoit.glasense.component.ListScope
@@ -92,7 +92,7 @@ fun SectionScope.CustomSwitchRow(
             ) {
                 if (glass) {
                     CompositionLocalProvider(
-                        LocalGlasenseSettings provides LocalGlasenseSettings.current.copy(
+                        LocalThemeSettings provides LocalThemeSettings.current.copy(
                             liquidGlass = true
                         )
                     ) {

@@ -1,7 +1,6 @@
 package com.nevoit.glasense.theme
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +21,9 @@ data class GlasenseType(
     val bodyEmphasized: TextStyle,
     val subHeadline: TextStyle,
     val subHeadlineEmphasized: TextStyle,
-    val footnote: TextStyle
+    val footnote: TextStyle,
+    val footnoteEmphasized: TextStyle,
+    val subHeadline2: TextStyle
 )
 
 val GlasenseTypeStandard = GlasenseType(
@@ -119,11 +120,23 @@ val GlasenseTypeStandard = GlasenseType(
     ),
     footnote = TextStyle(
         fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.5.sp
+    ),
+    footnoteEmphasized = TextStyle(
+        fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 14.sp,
         letterSpacing = 0.5.sp
-    )
+    ),
+    subHeadline2 = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.sp
+    ),
 )
-
-internal val LocalGlasenseType = staticCompositionLocalOf { GlasenseTypeStandard }

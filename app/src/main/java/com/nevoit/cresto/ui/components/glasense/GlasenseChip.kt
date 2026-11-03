@@ -41,8 +41,8 @@ import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
-import com.nevoit.glasense.theme.LocalGlasenseTextStyle
+import com.nevoit.glasense.theme.local.LocalContentColor
+import com.nevoit.glasense.theme.local.LocalTextStyle
 
 private val ChipHorizontalPadding = 16.dp
 private val ChipVerticalPadding = 8.dp
@@ -97,7 +97,7 @@ private fun GlasenseChipItem(
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else LocalGlasenseContentColor.current,
+        targetValue = if (isSelected) Color.White else LocalContentColor.current,
         animationSpec = tween(durationMillis = 100)
     )
 
@@ -142,7 +142,7 @@ fun FolderChipButton(
         Icon(
             painter = painterResource(R.drawable.ic_folder),
             contentDescription = null,
-            tint = LocalGlasenseContentColor.current,
+            tint = LocalContentColor.current,
             modifier = Modifier.size(28.dp)
         )
     }
@@ -150,7 +150,7 @@ fun FolderChipButton(
 
 @Composable
 private fun rememberChipMinHeight(): Dp {
-    val textStyle = LocalGlasenseTextStyle.current
+    val textStyle = LocalTextStyle.current
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val lineHeightPx = textMeasurer.measure(

@@ -22,7 +22,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.kyant.shapes.Capsule
-import com.nevoit.glasense.theme.LocalGlasenseColors
+import com.nevoit.glasense.theme.local.LocalColors
 import androidx.compose.animation.Animatable as ColorAnimatable
 import androidx.compose.animation.core.Animatable as FloatAnimatable
 
@@ -51,7 +51,7 @@ internal fun Switch(
     disabledAlpha: Float
 ) {
     val haptic = LocalHapticFeedback.current
-    val colors = LocalGlasenseColors.current
+    val colors = LocalColors.current
     val currentOnCheckedChange = rememberUpdatedState(onCheckedChange)
 
     val targetTrackColor = when {

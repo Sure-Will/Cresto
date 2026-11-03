@@ -16,7 +16,7 @@ import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.util.fastCoerceIn
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -83,7 +83,7 @@ private class DimIndicationNode(
             val targetColor = if (color != Color.Unspecified) {
                 color
             } else {
-                currentValueOf(LocalGlasenseContentColor)
+                currentValueOf(LocalContentColor)
             }
 
             val outline = shape.createOutline(size, layoutDirection, this)

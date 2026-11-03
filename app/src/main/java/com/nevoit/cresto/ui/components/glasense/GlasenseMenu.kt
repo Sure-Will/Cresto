@@ -63,21 +63,19 @@ import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.effect
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.shapes.RoundedRectangle
 import com.nevoit.cresto.R
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.theme.isAppInDarkTheme
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.component.VDivider
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.core.modifier.cachedClip
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.glasense.theme.GlasenseTheme
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -257,7 +255,7 @@ fun GlasenseMenu(
     }
 
     val darkTheme = isAppInDarkTheme()
-    val liquidGlass = LocalGlasenseSettings.current.liquidGlass
+    val liquidGlass = LocalThemeSettings.current.liquidGlass
 
     val shadowRadiusPx = with(LocalDensity.current) { 32.dp.toPx() }
     val shadowDyPx = with(LocalDensity.current) { 16.dp.toPx() }
@@ -350,7 +348,7 @@ fun GlasenseMenu(
                 .cachedClip(shape)
                 // Core of the blur effect, drawing a blurred version of the content behind it.
                 .then(
-                    if (LocalGlasenseSettings.current.liteMode) Modifier
+                    if (LocalThemeSettings.current.liteMode) Modifier
                         .graphicsLayer {
                             this.alpha = alphaAni.value
                         }
@@ -361,13 +359,7 @@ fun GlasenseMenu(
                             this.alpha = alphaAni.value
                         },
                         shadow = null,
-                        highlight = {
-                            if (liquidGlass) Highlight.Default.copy(
-                                style = HighlightStyle.Default(
-                                    angle = 90f
-                                )
-                            ) else null
-                        },
+                        highlight = null,
                         effects = {
                             padding = 50.dp.toPx() * 2
                             materialEffect?.let { effect(it) }
@@ -378,7 +370,7 @@ fun GlasenseMenu(
                             this.alpha = alphaAni.value
                         }
                         .background(GlasenseTheme.colors.cardBackground))
-                .then(if (liquidGlass) Modifier else Modifier.glasenseHighlight(16.dp))
+                .glasenseHighlight(16.dp)
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
                     layout(placeable.width, placeable.height) {

@@ -62,7 +62,7 @@ import com.nevoit.cresto.data.todo.TodoViewModel
 import com.nevoit.cresto.feature.home.TodoListSectionHead
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.toolkit.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.components.glasense.DialogItemData
 import com.nevoit.cresto.ui.components.glasense.DialogState
@@ -133,7 +133,7 @@ fun RecentlyDeletedScreen(viewModel: TodoViewModel) {
     }
 
     val floatingBarColor = AppColors.pageBackground.copy(.5f)
-    val liquidGlass = LocalGlasenseSettings.current.liquidGlass
+    val liquidGlass = LocalThemeSettings.current.liquidGlass
     val today = LocalDate.now()
     val todosByRemainingDays = remember(todos, today) {
         todos.groupBy { item ->

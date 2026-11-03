@@ -26,12 +26,11 @@ import com.nevoit.cresto.feature.settings.CustomSwitchRow
 import com.nevoit.cresto.ui.components.glasense.GlasenseCheckbox
 import com.nevoit.glasense.component.ListScope
 import com.nevoit.glasense.core.component.Text
-import com.nevoit.glasense.theme.GlasenseThemeMode
 
 private enum class ColorMode(val value: Int) {
-    Light(GlasenseThemeMode.LIGHT),
-    Dark(GlasenseThemeMode.DARK),
-    System(GlasenseThemeMode.SYSTEM);
+    Light(0),
+    Dark(1),
+    System(2);
 
     companion object {
         fun from(value: Int): ColorMode {

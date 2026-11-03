@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 
 enum class ButtonRole {
     Destructive,
@@ -334,7 +334,7 @@ private class SurfaceButtonStyle(
             contentAlignment = Alignment.Center
         ) {
             CompositionLocalProvider(
-                LocalGlasenseContentColor provides contentColor
+                LocalContentColor provides contentColor
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,

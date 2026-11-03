@@ -1,4 +1,4 @@
-package com.nevoit.cresto.ui.components.glasense.material
+package com.nevoit.glasense.material
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable

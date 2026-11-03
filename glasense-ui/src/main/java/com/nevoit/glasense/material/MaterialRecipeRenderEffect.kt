@@ -1,4 +1,4 @@
-package com.nevoit.cresto.ui.components.glasense.material
+package com.nevoit.glasense.material
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
@@ -7,7 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.asComposeRenderEffect
-import com.nevoit.cresto.util.supportsRuntimeShaderEffect
+import com.nevoit.glasense.core.utility.supportsRuntimeShaderEffect
 import androidx.compose.ui.graphics.RenderEffect as ComposeRenderEffect
 
 @Composable

@@ -1,5 +1,6 @@
 package com.nevoit.cresto.ui.components.glasense
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -20,16 +21,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.kyant.shapes.RoundedRectangle
+import com.nevoit.cresto.theme.LocalThemeSettings
+import com.nevoit.glasense.material.glassDecorations
 
+@Composable
 fun Modifier.glasenseHighlight(
     cornerRadius: Dp,
     strokeWidth: Dp = 1.5.dp
 ): Modifier = glasenseHighlight(RoundedRectangle(cornerRadius), strokeWidth)
 
+@Composable
 fun Modifier.glasenseHighlight(
     shape: Shape,
-    strokeWidth: Dp = 1.5.dp
-): Modifier = this then GlasenseHighlightElement(shape, strokeWidth)
+    strokeWidth: Dp = 1.5.dp,
+    liquidGlass: Boolean = LocalThemeSettings.current.liquidGlass
+): Modifier =
+    if (liquidGlass) glassDecorations(shape = shape) else this then GlasenseHighlightElement(
+        shape,
+        strokeWidth
+    )
 
 private data class GlasenseHighlightElement(
     val shape: Shape,

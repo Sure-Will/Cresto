@@ -62,7 +62,7 @@ import com.nevoit.cresto.feature.settings.util.SettingsManager
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.AppSpecs
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.theme.gradientColorsDark
 import com.nevoit.cresto.theme.isAppInDarkTheme
 import com.nevoit.cresto.ui.components.glasense.GlasenseButton
@@ -116,7 +116,7 @@ fun AiTodoReviewContainer(
 
     var isReady by remember { mutableStateOf(false) }
 
-    val liteMode = LocalGlasenseSettings.current.liteMode
+    val liteMode = LocalThemeSettings.current.liteMode
 
     val rotationY = remember { Animatable(1f) }
     val blurRadius = remember { Animatable(0f) }

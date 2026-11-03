@@ -5,15 +5,11 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.view.WindowCompat
 import com.nevoit.cresto.MainActivity
 import com.nevoit.cresto.feature.settings.util.SettingsManager
-import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.GlasenseTheme
-import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.core.utility.clearBackground
 
 class GuideActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,23 +19,16 @@ class GuideActivity : AppCompatActivity() {
         window.isNavigationBarContrastEnforced = false
         setContent {
             GlasenseTheme {
-                val overscrollFactory = rememberOffsetOverscrollFactory()
+                GuideScreen(onFinish = {
+                    SettingsManager.isFirstRun = false
 
-                CompositionLocalProvider(
-                    LocalOverscrollFactory provides overscrollFactory,
-                    LocalGlasenseContentColor provides AppColors.content,
-                ) {
-                    GuideScreen(onFinish = {
-                        SettingsManager.isFirstRun = false
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
 
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-
-                        finish()
-                    })
-                }
+                    finish()
+                })
             }
         }
-        window.setBackgroundDrawable(null)
+        clearBackground()
     }
 }

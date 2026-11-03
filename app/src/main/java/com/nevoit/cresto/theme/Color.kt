@@ -35,7 +35,7 @@ fun getFlagColor(flag: Int): Color {
 
 @Composable
 fun harmonize(color: Color): Color {
-    return if (LocalGlasenseSettings.current.dynamicColor) {
+    return if (LocalThemeSettings.current.dynamicColor) {
         color.harmonizeWith(AppColors.primary)
     } else {
         color

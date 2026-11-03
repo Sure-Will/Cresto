@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyant.shapes.Capsule
 import com.nevoit.glasense.core.interaction.DimIndication
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 
 @Immutable
 data class GlasenseButtonColors(
@@ -115,7 +115,7 @@ fun GlasenseButton(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }
@@ -163,7 +163,7 @@ fun GlasenseButtonAlt(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }
@@ -256,7 +256,7 @@ fun GlasenseButtonAdaptable(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }
@@ -294,7 +294,7 @@ fun GlasenseButtonCompact(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }
@@ -364,7 +364,7 @@ fun GlasenseButton(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }
@@ -438,7 +438,7 @@ fun GlasenseButtonToolBar(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalGlasenseContentColor provides contentColor
+            LocalContentColor provides contentColor
         ) {
             content()
         }

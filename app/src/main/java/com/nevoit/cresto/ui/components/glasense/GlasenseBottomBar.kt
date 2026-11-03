@@ -14,7 +14,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawPlainBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.runtimeShaderEffect
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.toolkit.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.components.CustomAnimatedVisibility
 import com.nevoit.cresto.ui.components.myFadeIn
@@ -46,7 +46,7 @@ fun GlasenseBottomBar(
     surfaceColor: Color,
     content: @Composable () -> Unit
 ) {
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
     // Main container for the title bar and content.
     Box(
         modifier = modifier

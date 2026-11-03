@@ -84,7 +84,7 @@ import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.lumify
+import com.nevoit.glasense.theme.utility.lumify
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.cos

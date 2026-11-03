@@ -68,7 +68,7 @@ import com.nevoit.glasense.core.component.VDivider
 import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -390,7 +390,7 @@ fun AdvancedPage(
             }
             item {
                 CompositionLocalProvider(
-                    LocalGlasenseContentColor provides contentVariant
+                    LocalContentColor provides contentVariant
                 ) {
                     Column(
                         modifier = Modifier

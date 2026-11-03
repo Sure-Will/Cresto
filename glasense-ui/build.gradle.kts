@@ -44,4 +44,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(libs.shapes)
+    implementation(libs.backdrop)
 }

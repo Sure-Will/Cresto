@@ -1,7 +1,6 @@
 package com.nevoit.glasense.theme
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,8 +37,6 @@ val GlasenseSpecsVariant = GlasenseSpecs(
     buttonShape = Capsule(),
     textFieldCorner = 16.dp,
     textFieldShape = RoundedRectangle(16.dp),
-    dialogCorner = 24.dp,
+    dialogCorner = 36.dp,
     dialogShape = RoundedRectangle(36.dp)
 )
-
-internal val LocalGlasenseSpecs = staticCompositionLocalOf { GlasenseSpecsStandard }

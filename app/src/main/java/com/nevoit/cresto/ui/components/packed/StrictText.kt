@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.takeOrElse
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
-import com.nevoit.glasense.theme.LocalGlasenseTextStyle
+import com.nevoit.glasense.theme.local.LocalContentColor
+import com.nevoit.glasense.theme.local.LocalTextStyle
 import kotlin.math.roundToInt
 
 
@@ -44,11 +44,11 @@ fun StrictText(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
-    style: TextStyle = LocalGlasenseTextStyle.current,
+    style: TextStyle = LocalTextStyle.current,
 ) {
 
     val textColor =
-        color.takeOrElse { style.color.takeOrElse { LocalGlasenseContentColor.current } }
+        color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
 
     val styleOverlay = TextStyle(
         color = textColor,

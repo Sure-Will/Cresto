@@ -6,14 +6,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.view.WindowCompat
 import com.nevoit.cresto.data.todo.TodoViewModel
-import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.GlasenseTheme
-import com.nevoit.glasense.core.interaction.overscroll.rememberOffsetOverscrollFactory
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.core.utility.clearBackground
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class RecentlyDeletedActivity : AppCompatActivity() {
@@ -28,16 +24,10 @@ class RecentlyDeletedActivity : AppCompatActivity() {
 
         setContent {
             GlasenseTheme {
-                val overscrollFactory = rememberOffsetOverscrollFactory()
-                CompositionLocalProvider(
-                    LocalOverscrollFactory provides overscrollFactory,
-                    LocalGlasenseContentColor provides AppColors.content
-                ) {
-                    RecentlyDeletedScreen(viewModel = todoViewModel)
-                }
+                RecentlyDeletedScreen(viewModel = todoViewModel)
             }
         }
-        window.setBackgroundDrawable(null)
+        clearBackground()
     }
 
     companion object {

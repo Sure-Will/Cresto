@@ -64,14 +64,12 @@ import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.nevoit.cresto.R
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppSpecs
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.toolkit.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonAlt
 import com.nevoit.cresto.ui.components.glasense.GlasenseModalTopBar
 import com.nevoit.cresto.ui.components.glasense.glasenseHighlight
 import com.nevoit.cresto.ui.components.glasense.isScrolledPast
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.ui.components.packed.ConfigItemContainer
 import com.nevoit.cresto.ui.modifier.shaderRipple
 import com.nevoit.cresto.ui.modifier.tiltOnPress
@@ -83,6 +81,8 @@ import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.component.VDivider
 import com.nevoit.glasense.core.component.VGap
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.glasense.theme.GlasenseTheme
 import java.time.Instant
 import java.time.ZoneId
@@ -375,7 +375,7 @@ private fun UpdateTopBar(
     onClose: () -> Unit
 ) {
     val surfaceColor = GlasenseTheme.colors.elevatedPageBackground
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
 
     Box(
         modifier = Modifier
@@ -454,7 +454,7 @@ private fun BoxScope.UpdateActions(
     onOpenInBrowser: () -> Unit
 ) {
     val materialEffect = rememberMaterialRenderEffectOrNull(MaterialRecipes.thin())
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
     val message = when (installState) {
         UpdateInstallState.AwaitingPermission -> stringResource(R.string.update_permission_hint)
         is UpdateInstallState.Failed -> stringResource(installState.messageRes) +

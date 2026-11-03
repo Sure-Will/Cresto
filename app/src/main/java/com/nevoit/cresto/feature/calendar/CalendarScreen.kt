@@ -82,7 +82,7 @@ import com.nevoit.cresto.feature.home.TodoListItemRow
 import com.nevoit.cresto.feature.settings.util.SettingsViewModel
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.toolkit.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.ui.components.CustomAnimatedVisibility
 import com.nevoit.cresto.ui.components.glasense.GlasenseButtonAdaptable
@@ -223,7 +223,7 @@ fun CalendarScreen() {
     val density = LocalDensity.current
     var headerHeightPx by remember { mutableFloatStateOf(0f) }
     val backgroundColor = AppColors.pageBackground
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
 
     val isBlurVisible by remember {
         derivedStateOf {

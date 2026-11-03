@@ -53,19 +53,20 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.effect
 import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.highlight.HighlightStyle
+import com.kyant.shapes.RoundedRectangle
 import com.nevoit.cresto.feature.settings.util.SettingsManager
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.AppSpecs
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.theme.isAppInDarkTheme
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
 import com.nevoit.glasense.core.component.Icon
 import com.nevoit.glasense.core.component.Text
+import com.nevoit.glasense.material.GlassStyle
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.glass
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.glasense.theme.GlasenseTheme
 import com.nevoit.glasense.theme.tokens.Springs
 import kotlinx.coroutines.coroutineScope
@@ -147,7 +148,7 @@ fun GlasenseDialog(
 
     var liquidGlass by SettingsManager.isLiquidGlassState
 
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
     val darkTheme = isAppInDarkTheme()
     val screenWidth =
         with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
@@ -155,6 +156,7 @@ fun GlasenseDialog(
     val shadowBaseColor =
         if (darkTheme) Color.Black.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.1f)
     val dialogShape = AppSpecs.dialogShape
+    val cornerRadius = AppSpecs.dialogCorner
     val shadowRadiusPx = with(LocalDensity.current) { 32.dp.toPx() }
     val shadowDyPx = with(LocalDensity.current) { 16.dp.toPx() }
     val shadowPaint = remember {
@@ -165,7 +167,7 @@ fun GlasenseDialog(
     }
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
-
+    val glassStyle = GlassStyle(firstBlurRadius = 4.dp, secondBlurRadius = 32.dp)
     val materialEffect = rememberMaterialRenderEffectOrNull(MaterialRecipes.thin())
 
     if (dialogState.isVisible) {
@@ -255,7 +257,16 @@ fun GlasenseDialog(
                         }
                     }
                     .then(
-                        if (supportsRuntimeShaderEffect()) Modifier.drawBackdrop(
+                        if (supportsRuntimeShaderEffect()) if (liquidGlass) Modifier.glass(
+                            backdrop = backdrop,
+                            shape = RoundedRectangle(cornerRadius),
+                            materialEffect = materialEffect, layerBlock = {
+                                scaleX = scaleAni.value
+                                scaleY = scaleAni.value
+                                alpha = alphaAni.value
+                            },
+                            style = glassStyle
+                        ) else Modifier.drawBackdrop(
                             backdrop = backdrop,
                             shape = { dialogShape },
                             effects = {
@@ -273,16 +284,9 @@ fun GlasenseDialog(
                                     lens(48f.dp.toPx(), 48f.dp.toPx())
                                 }
                             },
-                            highlight = {
-                                if (liquidGlass) Highlight.Default.copy(
-                                    style = HighlightStyle.Default(
-                                        angle = 90f
-                                    )
-                                ) else null
-                            },
+                            highlight = null,
                             shadow = null,
                             innerShadow = null,
-                            // Custom drawing on top of the blurred background to create stunning colors.
                             onDrawSurface = {
                                 if (!blur) drawRect(
                                     brush = SolidColor(surfaceColor),

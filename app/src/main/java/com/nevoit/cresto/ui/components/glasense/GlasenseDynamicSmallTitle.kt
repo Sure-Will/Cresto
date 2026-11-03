@@ -26,7 +26,7 @@ import com.kyant.backdrop.drawPlainBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.nevoit.cresto.theme.AppColors
-import com.nevoit.cresto.theme.LocalGlasenseSettings
+import com.nevoit.cresto.theme.LocalThemeSettings
 import com.nevoit.cresto.toolkit.gaussiangradient.smoothGradientMask
 import com.nevoit.cresto.util.supportsRuntimeShaderEffect
 import com.nevoit.glasense.core.component.Text
@@ -57,7 +57,7 @@ fun GlasenseDynamicSmallTitle(
     titleHorizontalPadding: Dp = 80.dp,
     content: @Composable () -> Unit
 ) {
-    val blur = !LocalGlasenseSettings.current.liteMode
+    val blur = !LocalThemeSettings.current.liteMode
 
     val alpha =
         animateFloatAsState(targetValue = if (isVisible) 1f else 0f, animationSpec = tween(300))

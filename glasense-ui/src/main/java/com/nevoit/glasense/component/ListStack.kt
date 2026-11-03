@@ -47,8 +47,8 @@ import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.interaction.DimIndication
 import com.nevoit.glasense.core.interaction.rememberFlingBehavior
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseColors
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalColors
+import com.nevoit.glasense.theme.local.LocalContentColor
 import com.nevoit.glasense.theme.tokens.Red500
 
 @DslMarker
@@ -567,7 +567,7 @@ private fun ListRowFrame(
     val contentColor = if (destructive) {
         Red500
     } else {
-        LocalGlasenseContentColor.current
+        LocalContentColor.current
     }
 
     ListRowContainer(
@@ -593,7 +593,7 @@ private fun ListRowFrame(
     ) {
         if (!hasLeading && !hasAccessory) {
             CompositionLocalProvider(
-                LocalGlasenseContentColor provides contentColor
+                LocalContentColor provides contentColor
             ) {
                 rowScope.content()
             }
@@ -634,7 +634,7 @@ private fun ListRowLayout(
                     contentAlignment = Alignment.Center
                 ) {
                     CompositionLocalProvider(
-                        LocalGlasenseContentColor provides contentColor
+                        LocalContentColor provides contentColor
                     ) {
                         rowScope.leading()
                     }
@@ -645,7 +645,7 @@ private fun ListRowLayout(
                 contentAlignment = Alignment.CenterStart
             ) {
                 CompositionLocalProvider(
-                    LocalGlasenseContentColor provides contentColor
+                    LocalContentColor provides contentColor
                 ) {
                     rowScope.content()
                 }
@@ -656,7 +656,7 @@ private fun ListRowLayout(
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     CompositionLocalProvider(
-                        LocalGlasenseContentColor provides trailingContentColor
+                        LocalContentColor provides trailingContentColor
                     ) {
                         rowScope.trailing()
                     }
@@ -906,7 +906,7 @@ private fun ListRowContainer(
     content: @Composable () -> Unit
 ) {
     val separatorColor =
-        if (style == ListStyle.InsetGrouped) LocalGlasenseContentColor.current.copy(.1f) else LocalGlasenseColors.current.scrimMedium
+        if (style == ListStyle.InsetGrouped) LocalContentColor.current.copy(.1f) else LocalColors.current.scrimMedium
     val shape = when (style) {
         ListStyle.Plain -> RectangleShape
 

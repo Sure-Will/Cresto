@@ -34,7 +34,7 @@ import com.nevoit.cresto.theme.AppSpecs
 import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.interaction.rememberDecaySpec
 import com.nevoit.glasense.core.interaction.rememberSnapFlingBehavior
-import com.nevoit.glasense.theme.LocalGlasenseTextStyle
+import com.nevoit.glasense.theme.local.LocalTextStyle
 import com.nevoit.glasense.theme.tokens.Springs
 import kotlin.math.absoluteValue
 import kotlin.math.sin
@@ -46,7 +46,7 @@ fun GlasenseWheelPicker(
     currentSelected: Int = 0,
     visibleItemsCount: Int = 7,
     itemHeight: Dp = 40.dp,
-    textStyle: TextStyle = LocalGlasenseTextStyle.current,
+    textStyle: TextStyle = LocalTextStyle.current,
     indicator: Boolean = true,
     onItemSelected: (Int) -> Unit
 ) {

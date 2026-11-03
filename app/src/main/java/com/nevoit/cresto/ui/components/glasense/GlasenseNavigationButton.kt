@@ -18,7 +18,6 @@ import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.effect
-import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.shadow.Shadow
@@ -26,8 +25,9 @@ import com.kyant.shapes.Capsule
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.NavigationButtonActiveColors
 import com.nevoit.cresto.theme.NavigationButtonNormalColors
-import com.nevoit.cresto.ui.components.glasense.material.MaterialRecipes
-import com.nevoit.cresto.ui.components.glasense.material.rememberMaterialRenderEffectOrNull
+import com.nevoit.glasense.material.MaterialRecipes
+import com.nevoit.glasense.material.glass
+import com.nevoit.glasense.material.rememberMaterialRenderEffectOrNull
 import com.nevoit.glasense.theme.GlasenseTheme
 
 /**
@@ -55,48 +55,57 @@ fun GlasenseNavigationButton(
             if (liquidGlass) MaterialRecipes.thin() else MaterialRecipes.appBar()
         )
     val backdropModifier = materialEffect?.let { renderEffect ->
-        Modifier.drawBackdrop(
-            backdrop = backdrop,
-            shape = { Capsule() },
-            shadow = {
-                Shadow(
-                    radius = 24.dp,
-                    color = Color.Black.copy(alpha = 0.08f),
-                    offset = DpOffset(0.dp, 8.dp)
-                )
-            },
-            innerShadow = null,
-            highlight = {
-                if (liquidGlass) Highlight.Default.copy(
-                    style = HighlightStyle.Default(
-                        angle = 90f
+        if (liquidGlass) {
+            Modifier.glass(
+                backdrop = backdrop,
+                shape = Capsule(),
+                shadow = {
+                    Shadow(
+                        radius = 24.dp,
+                        color = Color.Black.copy(alpha = 0.08f),
+                        offset = DpOffset(0.dp, 8.dp)
                     )
-                ) else null
-            },
-            effects = {
-                padding = if (liquidGlass) 8f.dp.toPx() * 2 else 32f.dp.toPx() * 2
-                if (!isActive) {
-                    effect(renderEffect)
-                    blur(if (liquidGlass) 8f.dp.toPx() else 32f.dp.toPx(), TileMode.Clamp)
-                    if (liquidGlass) lens(16f.dp.toPx(), 48f.dp.toPx())
-                }
-                if (isActive) {
-                    if (liquidGlass) {
-                        blur(8f.dp.toPx(), TileMode.Clamp)
-                        lens(16f.dp.toPx(), 48f.dp.toPx())
+                },
+                materialEffect = materialEffect,
+                onDrawSurface = {
+                    if (isActive) {
+                        drawRect(tint, blendMode = BlendMode.Hue, alpha = .8f)
+                        drawRect(tint.copy(alpha = 0.7f))
+                    }
+                })
+        } else {
+            Modifier.drawBackdrop(
+                backdrop = backdrop,
+                shape = { Capsule() },
+                shadow = {
+                    Shadow(
+                        radius = 24.dp,
+                        color = Color.Black.copy(alpha = 0.08f),
+                        offset = DpOffset(0.dp, 8.dp)
+                    )
+                },
+                innerShadow = null,
+                highlight = {
+                    if (liquidGlass) Highlight.Default.copy(
+                        style = HighlightStyle.Default(
+                            angle = 90f
+                        )
+                    ) else null
+                },
+                effects = {
+                    padding = 32f.dp.toPx() * 2
+                    if (!isActive) {
+                        effect(renderEffect)
+                        blur(32f.dp.toPx(), TileMode.Clamp)
+                    }
+                },
+                onDrawSurface = {
+                    if (isActive) {
+                        drawRect(tint)
                     }
                 }
-            },
-            onDrawSurface = {
-                if (liquidGlass && isActive) {
-                    drawRect(tint, blendMode = BlendMode.Hue, alpha = .8f)
-                    drawRect(tint.copy(alpha = 0.7f))
-                }
-                if (isActive && !liquidGlass) {
-                    drawRect(tint)
-                }
-            }
-        )
+            )
+        }
     } ?: Modifier
         .dropShadow(
             Capsule(),

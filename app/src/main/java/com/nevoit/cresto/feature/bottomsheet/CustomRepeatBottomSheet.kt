@@ -83,7 +83,7 @@ import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.component.VDivider
 import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.theme.GlasenseTheme
-import com.nevoit.glasense.theme.LocalGlasenseContentColor
+import com.nevoit.glasense.theme.local.LocalContentColor
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -565,7 +565,7 @@ private fun NumberInput(
             .padding(horizontal = 8.dp, vertical = 4.dp),
         textStyle = GlasenseTheme.type.body.copy(
             textAlign = TextAlign.Center,
-            color = LocalGlasenseContentColor.current
+            color = LocalContentColor.current
         ),
         cursorBrush = SolidColor(AppColors.primary),
         keyboardOptions = KeyboardOptions(
@@ -630,7 +630,7 @@ private fun StepperButton(
                 StepperType.Plus -> painterResource(id = R.drawable.ic_add)
             },
             contentDescription = null,
-            tint = LocalGlasenseContentColor.current
+            tint = LocalContentColor.current
         )
     }
 }
