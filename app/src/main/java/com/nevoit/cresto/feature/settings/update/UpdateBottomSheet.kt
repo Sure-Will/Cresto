@@ -3,12 +3,14 @@ package com.nevoit.cresto.feature.settings.update
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,6 +51,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -103,6 +108,25 @@ fun UpdateBottomSheet(
     val listState = rememberLazyListState()
     val visible by listState.isScrolledPast(0.dp)
 
+    val updater = remember(context) { AppUpdater.get(context) }
+    val installState by updater.state.collectAsStateWithLifecycle()
+    val userAction by updater.userAction.collectAsStateWithLifecycle()
+    val closable = !updateInfo.isRequired && !installState.isBusy
+
+    LifecycleResumeEffect(updater) {
+        updater.onResume()
+        onPauseOrDispose { }
+    }
+    LaunchedEffect(userAction) {
+        val confirm = userAction ?: return@LaunchedEffect
+        updater.consumeUserAction()
+        try {
+            context.startActivity(confirm)
+        } catch (_: ActivityNotFoundException) {
+            updater.onUserActionFailed()
+        }
+    }
+
     val backgroundColor = GlasenseTheme.colors.elevatedPageBackground
     val backdrop = rememberLayerBackdrop {
         drawRect(
@@ -115,7 +139,7 @@ fun UpdateBottomSheet(
     BottomSheet(
         onDismissed = onDismissed,
         onDismissRequest = { slideOut ->
-            if (!updateInfo.isRequired) slideOut()
+            if (closable) slideOut()
         }
     ) { slideOut ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -170,19 +194,27 @@ fun UpdateBottomSheet(
 
             UpdateTopBar(
                 isRequired = updateInfo.isRequired,
+                closable = closable,
                 backdrop = backdrop,
                 visible = visible,
                 onClose = slideOut
             )
             UpdateActions(
                 isRequired = updateInfo.isRequired,
-                onLater = slideOut,
+                installState = installState,
                 backdrop = backdrop,
-                onDownload = {
-                    if (context.openUpdateUrl(manifest.downloadUrl, manifest.fallbackDownloadUrl)) {
-                        if (!updateInfo.isRequired) slideOut()
+                onLater = slideOut,
+                onUpdate = {
+                    if (!updater.update(manifest)) {
+                        try {
+                            context.startActivity(updater.permissionIntent())
+                        } catch (_: ActivityNotFoundException) {
+                            // The hint below the buttons still tells the user what to allow.
+                        }
                     }
-                }
+                },
+                onCancel = updater::cancel,
+                onOpenInBrowser = { context.openUrl(manifest.downloadUrl) }
             )
         }
     }
@@ -337,6 +369,7 @@ private fun ReleaseNoteItem(text: String, index: Int) {
 @Composable
 private fun UpdateTopBar(
     isRequired: Boolean,
+    closable: Boolean,
     backdrop: LayerBackdrop,
     visible: Boolean,
     onClose: () -> Unit
@@ -393,7 +426,7 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
         } else {
             stringResource(R.string.update_available)
         },
-        leading = if (isRequired) {
+        leading = if (!closable) {
             null
         } else {
             {
@@ -413,14 +446,24 @@ return mix(content.eval(coord) * blurAlpha, tint * tintAlpha, tintIntensity);
 @Composable
 private fun BoxScope.UpdateActions(
     isRequired: Boolean,
+    installState: UpdateInstallState,
     backdrop: LayerBackdrop,
     onLater: () -> Unit,
-    onDownload: () -> Unit
+    onUpdate: () -> Unit,
+    onCancel: () -> Unit,
+    onOpenInBrowser: () -> Unit
 ) {
     val materialEffect = rememberMaterialRenderEffectOrNull(MaterialRecipes.thin())
     val blur = !LocalGlasenseSettings.current.liteMode
+    val message = when (installState) {
+        UpdateInstallState.AwaitingPermission -> stringResource(R.string.update_permission_hint)
+        is UpdateInstallState.Failed -> stringResource(installState.messageRes) +
+            installState.detail?.takeIf { it.isNotBlank() }?.let { "\n$it" }.orEmpty()
 
-    Row(
+        else -> null
+    }
+
+    Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .fillMaxWidth()
@@ -437,30 +480,73 @@ private fun BoxScope.UpdateActions(
             )
             .navigationBarsPadding()
             .padding(horizontal = 12.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (!isRequired) {
+        message?.let {
+            Text(
+                text = it,
+                style = GlasenseTheme.type.footnote,
+                color = GlasenseTheme.colors.contentVariant,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            when {
+                installState is UpdateInstallState.Failed ->
+                    UpdateSecondaryButton(R.string.update_open_in_browser, onClick = onOpenInBrowser)
+
+                installState.isBusy -> UpdateSecondaryButton(
+                    R.string.cancel,
+                    enabled = installState !is UpdateInstallState.Installing,
+                    onClick = onCancel
+                )
+
+                !isRequired -> UpdateSecondaryButton(R.string.later, onClick = onLater)
+            }
             GlasenseButtonAlt(
-                modifier = Modifier.weight(1f),
-                enabled = true,
-                onClick = onLater,
-                colors = AppButtonColors.secondary(),
+                modifier = Modifier
+                    .weight(1f)
+                    .glasenseHighlight(AppSpecs.buttonCorner),
+                enabled = !installState.isBusy,
+                onClick = onUpdate,
+                colors = AppButtonColors.primary(),
                 shape = AppSpecs.buttonShape
             ) {
-                Text(text = stringResource(R.string.later))
+                Text(
+                    text = when (installState) {
+                        is UpdateInstallState.Downloading -> stringResource(
+                            R.string.update_downloading,
+                            (installState.progress * 100).toInt()
+                        )
+
+                        UpdateInstallState.Verifying -> stringResource(R.string.update_verifying)
+                        UpdateInstallState.Installing -> stringResource(R.string.update_installing)
+                        is UpdateInstallState.Failed -> stringResource(R.string.update_retry)
+                        else -> stringResource(R.string.download_update)
+                    }
+                )
             }
         }
-        GlasenseButtonAlt(
-            modifier = Modifier
-                .weight(1f)
-                .glasenseHighlight(AppSpecs.buttonCorner),
-            enabled = true,
-            onClick = onDownload,
-            colors = AppButtonColors.primary(),
-            shape = AppSpecs.buttonShape
-        ) {
-            Text(text = stringResource(R.string.download_update))
-        }
+    }
+}
+
+@Composable
+private fun RowScope.UpdateSecondaryButton(
+    @StringRes text: Int,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    GlasenseButtonAlt(
+        modifier = Modifier.weight(1f),
+        enabled = enabled,
+        onClick = onClick,
+        colors = AppButtonColors.secondary(),
+        shape = AppSpecs.buttonShape
+    ) {
+        Text(text = stringResource(text))
     }
 }
 
@@ -484,10 +570,6 @@ private fun releaseNoteIcon(type: String?): Int {
         "improvement" -> R.drawable.ic_wand_and_rays
         else -> R.drawable.ic_gear
     }
-}
-
-private fun Context.openUpdateUrl(primaryUrl: String, fallbackUrl: String?): Boolean {
-    return openUrl(primaryUrl) || fallbackUrl?.let { openUrl(it) } == true
 }
 
 private fun Context.openUrl(url: String): Boolean {

@@ -15,6 +15,7 @@
 - Debug build: `bash ./gradlew :app:assembleDebug`. Device instrumentation requires an authorized real device and an explicitly selected test scope.
 - `assembleRelease` and `bundleRelease` finalize with `incrementVersionCode`, which writes `app/version.properties`. A verification-only release build must use an isolated copy or explicitly exclude that task; report the source and resulting artifact version accurately.
 - Builds and tests create output files and caches. Do not run them as part of a read-only inspection.
+- Signing, in-app updates and publishing follow `RELEASE.md`. Update manifest trust rules: `UpdatePolicyTest`. `scripts/prepare-release.sh` is a real release build (it bumps `version.properties`); publishing to `Sure-Will/Cresto-Releases` needs explicit approval.
 
 ## AI and UI acceptance
 

@@ -72,6 +72,7 @@ import com.nevoit.cresto.feature.calendar.toToastMessage
 import com.nevoit.cresto.feature.group.GroupBottomSheet
 import com.nevoit.cresto.feature.recentlydeleted.RecentlyDeletedActivity
 import com.nevoit.cresto.feature.screenextract.ScreenExtractEvents
+import com.nevoit.cresto.feature.settings.update.AppUpdater
 import com.nevoit.cresto.feature.settings.update.UpdateBottomSheet
 import com.nevoit.cresto.feature.settings.update.UpdateCheckResult
 import com.nevoit.cresto.feature.settings.update.UpdateChecker
@@ -181,6 +182,7 @@ fun MainScreen() {
     val pendingAiTodos by ScreenExtractEvents.pendingTodos.collectAsState()
 
     LaunchedEffect(Unit) {
+        AppUpdater.get(context).pruneDownloads()
         val now = System.currentTimeMillis()
         val oneDayMs = 24L * 60L * 60L * 1000L
         if (!SettingsManager.isCheckUpdatesOnStartup) return@LaunchedEffect

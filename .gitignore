@@ -22,3 +22,11 @@ local.properties
 /glasense-ui-demo/release/baselineProfiles/0/glasense-ui-demo-release.dm
 /glasense-ui-demo/release/baselineProfiles/1/glasense-ui-demo-release.dm
 /glasense-ui-demo/release/glasense-ui-demo-release.apk
+
+# Release signing — never commit
+keystore.properties
+*.jks
+*.keystore
+
+# Release assets
+/dist/

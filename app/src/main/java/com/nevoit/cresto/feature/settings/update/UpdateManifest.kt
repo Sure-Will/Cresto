@@ -7,14 +7,19 @@ data class UpdateManifest(
     val schemaVersion: Int = 1,
     val platform: String = "android",
     val channel: String = "stable",
+    val applicationId: String? = null,
     val versionCode: Int,
     val versionName: String,
+    val minSdk: Int? = null,
     val minSupportedVersionCode: Int? = null,
     val forceUpdate: Boolean = false,
     val publishedAt: String? = null,
     val heroImageUrl: String? = null,
+    /** APK asset of the GitHub release at [releaseUrl]; see [UpdatePolicy]. */
     val downloadUrl: String,
-    val fallbackDownloadUrl: String? = null,
+    val apkSize: Long? = null,
+    val apkSha256: String? = null,
+    val releaseUrl: String? = null,
     val description: Map<String, String> = emptyMap(),
     val releaseNotes: Map<String, List<ReleaseNoteSection>> = emptyMap()
 )

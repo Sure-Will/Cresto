@@ -15,6 +15,12 @@ val vNameProvider = versionPropsProvider.asText.map { text ->
     props.getProperty("VERSION_NAME", "1.0.0")
 }
 
+// Release signing lives only in the local, git-ignored keystore.properties (see RELEASE.md).
+val keystoreProps = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -30,16 +36,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nevoit.cresto"
+        applicationId = "com.sure.cresto"
         minSdk = 30
         targetSdk = 37
         versionCode = vCodeProvider.get()
         versionName = vNameProvider.get()
-        buildConfigField(
-            "String",
-            "UPDATE_MANIFEST_URL",
-            "\"https://nevodev.github.io/cresto/update/latest.json\""
-        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -47,13 +48,36 @@ android {
         }
     }
 
+    signingConfigs {
+        if (!keystoreProps.isEmpty) {
+            create("release") {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            // Debug builds are signed with the local debug key, so keep them apart from the
+            // installed release app and leave in-app updates off.
+            applicationIdSuffix = ".debug"
+            buildConfigField("String", "UPDATE_MANIFEST_URL", "\"\"")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+            signingConfigs.findByName("release")?.let { signingConfig = it }
+            buildConfigField(
+                "String",
+                "UPDATE_MANIFEST_URL",
+                "\"https://github.com/Sure-Will/Cresto-Releases/releases/latest/download/update.json\""
             )
         }
     }
