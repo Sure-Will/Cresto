@@ -79,6 +79,23 @@ internal fun BoxScope.NavigationBar(
         Spacer(modifier = Modifier.width(12.dp))
         GlasenseNavigationButton(
             modifier = Modifier.weight(1f),
+            isActive = currentRoute == Screen.Daily.route,
+            onClick = {
+                if (currentRoute != Screen.Daily.route) {
+                    onCurrentRouteChange(Screen.Daily.route)
+                }
+            },
+            backdrop = backdrop,
+            liquidGlass = liquidGlass
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_clock_cycle),
+                contentDescription = stringResource(R.string.daily)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        GlasenseNavigationButton(
+            modifier = Modifier.weight(1f),
             isActive = currentRoute == Screen.Settings.route,
             onClick = {
                 if (currentRoute != Screen.Settings.route) {

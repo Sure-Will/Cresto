@@ -417,4 +417,79 @@
     <string name="group">分组</string>
     <string name="rename">重命名</string>
     <string name="recently_deleted_tip">已删除的待办将在 “最近删除” 中保留 30 天，之后自动永久删除。</string>
+
+    <!-- Daily page: study plan -->
+    <string name="daily">每日</string>
+    <string name="study_tonight">今晚学习</string>
+    <string name="study_plan">学习计划</string>
+    <string name="study_week_format">第 %1$d 周 · %2$s</string>
+    <string name="study_output_format">留下：%s</string>
+    <string name="study_acceptance_format">本周验收：%s</string>
+    <string name="study_daily_slot_format">%1$s · %2$s</string>
+    <string name="study_no_session_today">今晚没有安排</string>
+    <string name="study_next_session_format">下一次是 %1$s：%2$s</string>
+    <string name="study_before_start_format">计划 %s 开始</string>
+    <string name="study_finished_format">本轮计划已结束，共 %d 周</string>
+    <string name="study_unscheduled">这一天不在计划表里</string>
+    <string name="study_not_configured">填写 GitHub token 后读取学习计划。</string>
+    <string name="study_rules">规则</string>
+    <string name="study_weekly_structure">每周结构</string>
+    <string name="study_weeks">逐周安排</string>
+    <string name="study_current_week">本周</string>
+    <string name="study_sync">同步</string>
+    <string name="study_repository">仓库</string>
+    <string name="study_path">文件路径</string>
+    <string name="study_token">GitHub Token</string>
+    <string name="study_sync_now">立即同步</string>
+    <string name="study_syncing">同步中…</string>
+    <string name="study_synced_at_format">计划同步于 %s</string>
+    <string name="study_showing_cached_format">显示的是 %s 同步的计划。</string>
+    <string name="study_token_hint">使用只授权这个仓库、Contents 只读的细粒度 token。token 只存在本机，不进备份。</string>
+    <string name="study_error_not_configured">还没有填写 token。</string>
+    <string name="study_error_invalid_source">仓库要写成 owner/name，路径要指向一个文件。</string>
+    <string name="study_error_unauthorized">token 无效或已过期。</string>
+    <string name="study_error_forbidden">token 没有读取这个仓库的权限。</string>
+    <string name="study_error_rate_limited">GitHub 请求次数超限，请稍后再试。</string>
+    <string name="study_error_not_found">找不到文件：请检查仓库和路径，以及 token 是否授权了这个仓库。</string>
+    <string name="study_error_network">网络不可用。</string>
+    <string name="study_error_server">GitHub 响应异常。</string>
+    <string name="study_error_too_large">计划文件太大。</string>
+    <string name="study_error_format">计划格式无法识别：%s。</string>
+    <string name="study_problem_missing_start_date">一级标题里没有开始日期（YYYY-MM-DD）</string>
+    <string name="study_problem_missing_weeks">缺少「## 十二周」表</string>
+    <string name="study_problem_missing_week_columns">十二周表缺少「周」或「日期」列</string>
+    <string name="study_problem_bad_week_dates">有一周的日期无法识别</string>
+
+    <!-- Daily page: habits -->
+    <string name="habits">习惯</string>
+    <string name="habit_add">添加习惯</string>
+    <string name="habit_name_hint">习惯名称</string>
+    <string name="habit_empty">点右上角 + 添加习惯，或在 设置 › 数据与存储 导入 Daily-Track 备份。</string>
+    <string name="habit_check_in">打卡</string>
+    <string name="habit_backfill">补打卡</string>
+    <string name="habit_today_format">今天 %1$s</string>
+    <string name="habit_today_none">今天还没打卡</string>
+    <string name="habit_week_month_format">本周 %1$s · 本月 %2$s</string>
+    <string name="habit_total_format">累计 %1$s，共 %2$s</string>
+    <string name="habit_today">今天</string>
+    <string name="habit_this_week">本周</string>
+    <string name="habit_this_month">本月</string>
+    <string name="habit_no_check_ins_on_day">这天没有打卡。</string>
+    <string name="habit_name">名称</string>
+    <string name="habit_delete">删除习惯</string>
+    <string name="habit_delete_message">会删除这个习惯和它的 %1$s，无法撤销。</string>
+    <string name="habit_delete_check_in">删除打卡</string>
+    <string name="habit_backup">习惯（Daily-Track）</string>
+    <string name="habit_export">导出习惯</string>
+    <string name="habit_import">导入习惯</string>
+    <string name="habit_backup_footer">与 Daily-Track 备份格式互通，两边的文件都能互相导入。导入按 ID 合并，不会删除已有记录。</string>
+    <string name="habit_import_result_format">新增 %1$d 个习惯，合并 %2$d 个，新增 %3$d 次打卡。</string>
+    <string name="habit_import_not_json">文件不是有效的 JSON。</string>
+    <string name="habit_import_no_habits">文件里没有找到习惯。</string>
+    <plurals name="habit_times">
+        <item quantity="other">%d 次打卡</item>
+    </plurals>
+    <plurals name="habit_days">
+        <item quantity="other">%d 天</item>
+    </plurals>
 </resources>

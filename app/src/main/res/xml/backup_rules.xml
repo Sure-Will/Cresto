@@ -10,4 +10,7 @@
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
 -->
+    <!-- Study plan settings hold a GitHub token. -->
+    <exclude domain="file" path="mmkv/study_plan" />
+    <exclude domain="file" path="mmkv/study_plan.crc" />
 </full-backup-content>

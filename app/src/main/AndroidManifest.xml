@@ -138,6 +138,18 @@
             android:theme="@style/Theme.Cresto"
             android:windowSoftInputMode="adjustNothing" />
         <activity
+            android:name=".feature.daily.HabitDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.Cresto"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
+            android:name=".feature.daily.StudyPlanActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.Cresto"
+            android:windowSoftInputMode="adjustNothing" />
+        <activity
             android:name=".feature.recentlydeleted.RecentlyDeletedActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity"

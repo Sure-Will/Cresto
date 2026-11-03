@@ -9,11 +9,12 @@
         <include .../>
         <exclude .../>
         -->
+        <!-- Study plan settings hold a GitHub token. -->
+        <exclude domain="file" path="mmkv/study_plan" />
+        <exclude domain="file" path="mmkv/study_plan.crc" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="mmkv/study_plan" />
+        <exclude domain="file" path="mmkv/study_plan.crc" />
     </device-transfer>
-    -->
 </data-extraction-rules>

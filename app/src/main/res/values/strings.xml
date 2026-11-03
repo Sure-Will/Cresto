@@ -432,4 +432,81 @@
     <string name="group">Group</string>
     <string name="rename">Rename</string>
     <string name="recently_deleted_tip">Deleted todos will remain in “Recently Deleted” for 30 days before being permanently deleted automatically.</string>
+
+    <!-- Daily page: study plan -->
+    <string name="daily">Daily</string>
+    <string name="study_tonight">Tonight</string>
+    <string name="study_plan">Study Plan</string>
+    <string name="study_week_format">Week %1$d · %2$s</string>
+    <string name="study_output_format">Leave: %s</string>
+    <string name="study_acceptance_format">This week: %s</string>
+    <string name="study_daily_slot_format">%1$s · %2$s</string>
+    <string name="study_no_session_today">Nothing scheduled tonight</string>
+    <string name="study_next_session_format">Next, %1$s: %2$s</string>
+    <string name="study_before_start_format">The plan starts on %s</string>
+    <string name="study_finished_format">This plan has ended after week %d</string>
+    <string name="study_unscheduled">This date is not in the plan</string>
+    <string name="study_not_configured">Add a GitHub token to load your study plan.</string>
+    <string name="study_rules">Rules</string>
+    <string name="study_weekly_structure">Each Week</string>
+    <string name="study_weeks">Weeks</string>
+    <string name="study_current_week">This week</string>
+    <string name="study_sync">Sync</string>
+    <string name="study_repository">Repository</string>
+    <string name="study_path">File Path</string>
+    <string name="study_token">GitHub Token</string>
+    <string name="study_sync_now">Sync Now</string>
+    <string name="study_syncing">Syncing…</string>
+    <string name="study_synced_at_format">Plan synced %s</string>
+    <string name="study_showing_cached_format">Showing the plan synced %s.</string>
+    <string name="study_token_hint">Use a fine-grained token limited to this repository with read-only Contents access. It stays on this device and is excluded from backups.</string>
+    <string name="study_error_not_configured">No token yet.</string>
+    <string name="study_error_invalid_source">The repository must look like owner/name and the path must point to a file.</string>
+    <string name="study_error_unauthorized">The token is invalid or has expired.</string>
+    <string name="study_error_forbidden">The token cannot read this repository.</string>
+    <string name="study_error_rate_limited">GitHub rate limit reached. Try again later.</string>
+    <string name="study_error_not_found">File not found. Check the repository, the path and whether the token can access the repository.</string>
+    <string name="study_error_network">Network unavailable.</string>
+    <string name="study_error_server">GitHub did not respond normally.</string>
+    <string name="study_error_too_large">The plan file is too large.</string>
+    <string name="study_error_format">The plan format was not recognized: %s.</string>
+    <string name="study_problem_missing_start_date">the title has no start date (YYYY-MM-DD)</string>
+    <string name="study_problem_missing_weeks">the “## 十二周” table is missing</string>
+    <string name="study_problem_missing_week_columns">the weeks table needs 周 and 日期 columns</string>
+    <string name="study_problem_bad_week_dates">a week has dates that cannot be read</string>
+
+    <!-- Daily page: habits -->
+    <string name="habits">Habits</string>
+    <string name="habit_add">Add habit</string>
+    <string name="habit_name_hint">Habit name</string>
+    <string name="habit_empty">Tap + to add a habit, or import a Daily-Track backup in Settings › Data &amp; Storage.</string>
+    <string name="habit_check_in">Check in</string>
+    <string name="habit_backfill">Check in for this day</string>
+    <string name="habit_today_format">Today %1$s</string>
+    <string name="habit_today_none">Not yet today</string>
+    <string name="habit_week_month_format">This week %1$s · This month %2$s</string>
+    <string name="habit_total_format">%1$s on %2$s</string>
+    <string name="habit_today">Today</string>
+    <string name="habit_this_week">This week</string>
+    <string name="habit_this_month">This month</string>
+    <string name="habit_no_check_ins_on_day">No check-ins on this day.</string>
+    <string name="habit_name">Name</string>
+    <string name="habit_delete">Delete habit</string>
+    <string name="habit_delete_message">This deletes the habit and its %1$s. It cannot be undone.</string>
+    <string name="habit_delete_check_in">Delete check-in</string>
+    <string name="habit_backup">Habits (Daily-Track)</string>
+    <string name="habit_export">Export habits</string>
+    <string name="habit_import">Import habits</string>
+    <string name="habit_backup_footer">Uses the Daily-Track backup format, so either app can read the other\'s file. Importing merges by ID and never deletes anything.</string>
+    <string name="habit_import_result_format">%1$d new habits, %2$d merged, %3$d new check-ins.</string>
+    <string name="habit_import_not_json">The file is not valid JSON.</string>
+    <string name="habit_import_no_habits">No habits were found in this file.</string>
+    <plurals name="habit_times">
+        <item quantity="one">%d check-in</item>
+        <item quantity="other">%d check-ins</item>
+    </plurals>
+    <plurals name="habit_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
 </resources>

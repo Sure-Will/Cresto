@@ -106,6 +106,7 @@ import java.time.LocalTime
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Star : Screen("star")
+    object Daily : Screen("daily")
     object Settings : Screen("settings")
 }
 
