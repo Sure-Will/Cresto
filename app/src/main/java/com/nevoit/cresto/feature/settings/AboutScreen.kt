@@ -36,7 +36,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -62,7 +61,6 @@ import com.nevoit.cresto.feature.settings.util.SettingsViewModel
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.AppSpecs
-import com.nevoit.cresto.theme.harmonize
 import com.nevoit.cresto.theme.isAppInDarkTheme
 import com.nevoit.cresto.ui.components.glasense.GlasenseButton
 import com.nevoit.cresto.ui.components.glasense.GlasenseDynamicSmallTitle
@@ -78,13 +76,11 @@ import com.nevoit.glasense.core.component.Text
 import com.nevoit.glasense.core.component.VGap
 import com.nevoit.glasense.theme.tokens.Amber400
 import com.nevoit.glasense.theme.tokens.Blue400
-import com.nevoit.glasense.theme.tokens.Blue500
 import com.nevoit.glasense.theme.tokens.Green400
 import com.nevoit.glasense.theme.tokens.Orange400
 import com.nevoit.glasense.theme.tokens.Pink400
 import com.nevoit.glasense.theme.tokens.Purple400
 import com.nevoit.glasense.theme.tokens.Rose400
-import com.nevoit.glasense.theme.tokens.Teal500
 import io.github.vinceglb.confettikit.compose.ConfettiKit
 import io.github.vinceglb.confettikit.core.Angle
 import io.github.vinceglb.confettikit.core.Party
@@ -247,26 +243,15 @@ fun AboutScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                 }
                 Row(
                     onClick = { uriHandler.openUri("https://github.com/Sure-Will") },
-                    // Same leading slot and modifiers as the rows above, so the avatars line up.
+                    // Sure's public GitHub avatar.
                     leading = {
-                        Box(
+                        Image(
+                            painter = painterResource(R.drawable.sure_avatar),
+                            contentDescription = stringResource(R.string.developer_avatar),
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .size(48.dp)
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(harmonize(Blue500), harmonize(Teal500))
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "S",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.W600
-                            )
-                        }
+                        )
                     },
                     accessory = ListRowAccessory.Chevron
                 ) {

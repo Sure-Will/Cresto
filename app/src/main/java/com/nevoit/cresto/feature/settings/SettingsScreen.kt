@@ -91,23 +91,6 @@ fun SettingsScreen() {
             item {
                 ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        AboutEntryItem(
-                            icon = painterResource(R.drawable.cresto),
-                            onClick = {
-                                context.startActivity(
-                                    SettingsActivity.createIntent(context, SettingsDestination.ABOUT)
-                                )
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        UpdateEntry(state = updateEntryState)
-                    }
-                }
-                VGap()
-            }
-            item {
-                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
                         ConfigEntryItem(
                             brush = Brush.sweepGradient(
                                 colorStops = arrayOf(
@@ -174,6 +157,23 @@ fun SettingsScreen() {
                                 )
                             }
                         )
+                    }
+                }
+                VGap()
+            }
+            item {
+                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        AboutEntryItem(
+                            icon = painterResource(R.drawable.cresto),
+                            onClick = {
+                                context.startActivity(
+                                    SettingsActivity.createIntent(context, SettingsDestination.ABOUT)
+                                )
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        UpdateEntry(state = updateEntryState)
                     }
                 }
                 VGap()
