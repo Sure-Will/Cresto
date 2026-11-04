@@ -101,7 +101,7 @@ object HabitBackupCodec {
                 task = item.string("task").orEmpty(),
                 strand = item.string("strand").orEmpty(),
                 updatedAt = item.string("updatedAt")?.let { parseTime(it, zone) }
-                    ?: date.atStartOfDay()
+                    ?: LocalDateTime.MIN
             )
             if (log.isEmpty) return@forEach
             val existing = byDate[date]

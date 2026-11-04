@@ -336,7 +336,12 @@ private fun ListScope.planSections(
                         )
                     }
                     AnimatedVisibility(visible = expanded) {
-                        WeekDetails(week, dimmed = isPast)
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            WeekDetails(week, dimmed = isPast)
+                            if (!isCurrent) {
+                                WeekDayRows(plan, week, today, logs, onOpenDay)
+                            }
+                        }
                     }
                 }
             }
@@ -454,8 +459,29 @@ private fun CurrentWeekCard(
             )
             ProgressBar(fraction = progress.fraction, color = AppColors.primary)
         }
+        WeekDayRows(plan, week, today, logs, onOpenDay)
+        if (week.acceptance.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.study_acceptance_format, week.acceptance),
+                style = GlasenseTheme.type.footnote,
+                color = AppColors.contentVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+/** Every date stays reachable, including unrecorded days and days without a session. */
+@Composable
+private fun WeekDayRows(
+    plan: StudyPlan,
+    week: StudyWeek,
+    today: LocalDate,
+    logs: Map<LocalDate, StudyLog>,
+    onOpenDay: (LocalDate) -> Unit
+) {
+    Column {
         StudyPlanSchedule.sessionsIn(plan, week).forEach { (date, session) ->
-            if (session == null && logs[date] == null) return@forEach
             val log = logs[date]
             androidx.compose.foundation.layout.Row(
                 modifier = Modifier
@@ -479,7 +505,8 @@ private fun CurrentWeekCard(
                         color = if (date == today) AppColors.primary else AppColors.contentVariant
                     )
                     Text(
-                        text = session?.task ?: log?.task.orEmpty(),
+                        text = session?.task ?: log?.task?.takeIf { it.isNotBlank() }
+                            ?: stringResource(R.string.study_no_session_on_day),
                         style = GlasenseTheme.type.subHeadline,
                         color = AppColors.content,
                         maxLines = 2,
@@ -504,14 +531,6 @@ private fun CurrentWeekCard(
                     )
                 }
             }
-        }
-        if (week.acceptance.isNotBlank()) {
-            Text(
-                text = stringResource(R.string.study_acceptance_format, week.acceptance),
-                style = GlasenseTheme.type.footnote,
-                color = AppColors.contentVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
         }
     }
 }

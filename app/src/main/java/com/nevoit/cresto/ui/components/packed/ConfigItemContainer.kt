@@ -84,6 +84,7 @@ fun ConfigTextField(
     backgroundColor: Color,
     value: String,
     onValueChange: (String) -> Unit,
+    enabled: Boolean = true,
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
@@ -120,6 +121,7 @@ fun ConfigTextField(
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
+                enabled = enabled,
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 8.dp)
                     .align(Alignment.CenterStart)

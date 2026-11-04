@@ -180,7 +180,8 @@ object StudyPlanParser {
                 return WeeksResult.Failure(StudyPlanProblem.DuplicateWeekNumber)
             }
             val dates = datesIn(row.cell(dateColumn), anchor)
-            if (dates.size < 2 || dates[1].isBefore(dates[0])) {
+            // A week can be shortened, but must contain at most seven days including both ends.
+            if (dates.size < 2 || dates[1].toEpochDay() - dates[0].toEpochDay() !in 0L..6L) {
                 return WeeksResult.Failure(StudyPlanProblem.BadWeekDates)
             }
             anchor = dates[0]

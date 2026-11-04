@@ -139,6 +139,40 @@ class StudyPlanTest {
     }
 
     @Test
+    fun rejectsEightDayWeek() {
+        assertProblem(
+            StudyPlanProblem.BadWeekDates,
+            sample.replace("| 1 | 11/03–11/08 |", "| 1 | 11/03–11/10 |")
+        )
+    }
+
+    @Test
+    fun rejectsUnboundedWeekRange() {
+        assertProblem(
+            StudyPlanProblem.BadWeekDates,
+            sample.replace("| 1 | 11/03–11/08 |", "| 1 | 2026-11-03–9999-12-31 |")
+        )
+    }
+
+    @Test
+    fun acceptsShortAndSevenDayWeeksIncludingNewYear() {
+        assertEquals(6, StudyPlanSchedule.sessionsIn(plan, plan.weeks[0]).size)
+        assertEquals(7, StudyPlanSchedule.sessionsIn(plan, plan.weeks[1]).size)
+        val newYearDays = StudyPlanSchedule.sessionsIn(plan, plan.weeks[2]).map { it.first }
+        assertEquals(7, newYearDays.size)
+        assertEquals(LocalDate.of(2026, 12, 28), newYearDays.first())
+        assertEquals(LocalDate.of(2027, 1, 3), newYearDays.last())
+
+        val singleDay = parseOrFail(
+            sample.replace("| 1 | 11/03–11/08 |", "| 1 | 11/03–11/03 |")
+        )
+        assertEquals(
+            listOf(LocalDate.of(2026, 11, 3)),
+            StudyPlanSchedule.sessionsIn(singleDay, singleDay.weeks.first()).map { it.first }
+        )
+    }
+
+    @Test
     fun acceptsNonconsecutiveWeekNumbers() {
         assertEquals(listOf(1, 2, 9, 12), parseOrFail(sample).weeks.map { it.number })
     }

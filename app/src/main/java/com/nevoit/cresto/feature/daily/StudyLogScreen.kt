@@ -78,8 +78,8 @@ fun StudyLogScreen(date: LocalDate) {
     val task = log?.task?.takeIf { it.isNotBlank() } ?: session?.task.orEmpty()
     val strandName = log?.strand?.takeIf { it.isNotBlank() } ?: session?.strand?.name.orEmpty()
 
-    var note by rememberSaveable { mutableStateOf<String?>(null) }
-    LaunchedEffect(logs) {
+    var note by rememberSaveable(date) { mutableStateOf<String?>(null) }
+    LaunchedEffect(date, logs) {
         if (note == null && logs != null) note = log?.note.orEmpty()
     }
 
@@ -159,6 +159,7 @@ fun StudyLogScreen(date: LocalDate) {
             Section(topSpacing = 24.dp) {
                 SwitchRow(
                     checked = log?.done == true,
+                    enabled = logs != null,
                     onCheckedChange = { done ->
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         habitRepository.setStudyDone(date, done, task, strandName)
@@ -174,6 +175,7 @@ fun StudyLogScreen(date: LocalDate) {
                     modifier = Modifier.padding(horizontal = 12.dp),
                     title = stringResource(R.string.study_note),
                     value = note.orEmpty(),
+                    enabled = logs != null && note != null,
                     onValueChange = {
                         note = it
                         habitRepository.setStudyNote(date, it, task, strandName)

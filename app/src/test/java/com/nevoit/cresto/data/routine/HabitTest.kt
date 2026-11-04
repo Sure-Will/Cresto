@@ -156,7 +156,7 @@ class HabitTest {
         )
         assertEquals("新", backup.studyLogs[0].note)
         // Without an edit time a record counts as the oldest copy, so it never overwrites.
-        assertEquals(LocalDate.of(2026, 11, 5).atStartOfDay(), backup.studyLogs[1].updatedAt)
+        assertEquals(LocalDateTime.MIN, backup.studyLogs[1].updatedAt)
         assertTrue(backup.studyLogs[1].done)
     }
 
