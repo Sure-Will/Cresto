@@ -288,14 +288,14 @@ fun AboutEntryItem(
                 color = AppColors.content,
             )
             Text(
-                text = stringResource(R.string.developed_by_nevoit),
+                text = stringResource(R.string.developed_by_nevoit_maintained_by_sure),
                 fontSize = 12.sp,
                 lineHeight = 12.sp,
                 fontWeight = FontWeight.W400,
                 color = AppColors.contentVariant,
             )
             Text(
-                text = "$versionText ${packageInfo?.versionName}",
+                text = "$versionText ${packageInfo?.versionName} (${packageInfo?.longVersionCode})",
                 fontSize = 12.sp,
                 lineHeight = 12.sp,
                 fontWeight = FontWeight.W400,

@@ -526,4 +526,12 @@
     <string name="study_recent_notes">Recent notes</string>
     <string name="study_week_done_format">%1$d/%2$d</string>
     <string name="study_log_import_result_format">Study records updated for %1$d days.</string>
+
+    <!-- Settings: version and updates -->
+    <string name="developed_by_nevoit_maintained_by_sure">Developed by Nevoit · Maintained by Sure</string>
+    <string name="fork_maintainer">Fork maintainer</string>
+    <string name="update_status_latest">Up to date</string>
+    <string name="update_status_failed">Failed</string>
+    <string name="update_status_debug">Not in debug builds</string>
+    <string name="update_status_available_format">%1$s available</string>
 </resources>

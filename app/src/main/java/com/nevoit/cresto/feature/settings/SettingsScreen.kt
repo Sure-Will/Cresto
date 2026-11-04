@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nevoit.cresto.R
+import com.nevoit.cresto.feature.settings.update.UpdateEntry
+import com.nevoit.cresto.feature.settings.update.rememberUpdateEntryState
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.harmonize
@@ -58,6 +60,7 @@ fun SettingsScreen() {
     val hierarchicalSurfaceColor = AppColors.cardBackground
 
     val lazyListState = rememberLazyListState()
+    val updateEntryState = rememberUpdateEntryState()
 
     val isSmallTitleVisible by lazyListState.isScrolledPast(statusBarHeight + 24.dp)
 
@@ -84,6 +87,23 @@ fun SettingsScreen() {
                 GlasensePageHeader(
                     title = stringResource(R.string.settings)
                 )
+            }
+            item {
+                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        AboutEntryItem(
+                            icon = painterResource(R.drawable.cresto),
+                            onClick = {
+                                context.startActivity(
+                                    SettingsActivity.createIntent(context, SettingsDestination.ABOUT)
+                                )
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        UpdateEntry(state = updateEntryState)
+                    }
+                }
+                VGap()
             }
             item {
                 ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
@@ -155,19 +175,6 @@ fun SettingsScreen() {
                             }
                         )
                     }
-                }
-                VGap()
-            }
-            item {
-                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
-                    AboutEntryItem(
-                        icon = painterResource(R.drawable.cresto),
-                        onClick = {
-                            context.startActivity(
-                                SettingsActivity.createIntent(context, SettingsDestination.ABOUT)
-                            )
-                        }
-                    )
                 }
                 VGap()
             }
