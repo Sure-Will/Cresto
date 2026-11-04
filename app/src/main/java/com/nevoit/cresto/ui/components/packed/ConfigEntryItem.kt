@@ -66,6 +66,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param isSwitch If true, the forward arrow is hidden, implying a switch might be placed here. Defaults to false.
  * @param enableGlow If true, a glow effect is added to the icon. Defaults to false.
  * @param onClick The lambda function to be executed when the item is clicked.
+ * @param trailing Optional content displayed after the title in place of the forward arrow.
  */
 @Composable
 fun ConfigEntryItem(
@@ -75,7 +76,8 @@ fun ConfigEntryItem(
     title: String,
     isSwitch: Boolean? = false,
     enableGlow: Boolean? = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    trailing: (@Composable () -> Unit)? = null
 ) {
     // Interaction source to track press state.
     val interactionSource = remember { MutableInteractionSource() }
@@ -167,7 +169,11 @@ fun ConfigEntryItem(
         )
         Spacer(modifier = Modifier.width(12.dp))
         // Display a forward arrow if it's not a switch item.
-        if (isSwitch == null || !isSwitch) {
+        if (trailing != null) {
+            Box(modifier = Modifier.align(Alignment.CenterVertically)) {
+                trailing()
+            }
+        } else if (isSwitch == null || !isSwitch) {
 
             Icon(
                 painter = painterResource(R.drawable.ic_forward),

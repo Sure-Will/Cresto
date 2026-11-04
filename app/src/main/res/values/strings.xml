@@ -528,6 +528,8 @@
     <string name="study_log_import_result_format">Study records updated for %1$d days.</string>
 
     <!-- Settings: version and updates -->
+    <string name="settings_section_updates">Updates</string>
+    <string name="check_for_updates_on_startup_footer">Checks when Cresto opens, at most once a day. You\'ll only be notified when there\'s a new version.</string>
     <string name="developed_by_nevoit_maintained_by_sure">Developed by Nevoit · Maintained by Sure</string>
     <string name="fork_maintainer">Fork maintainer</string>
     <string name="update_status_latest">Up to date</string>

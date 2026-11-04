@@ -88,6 +88,7 @@ fun GeneralScreen(settingsViewModel: SettingsViewModel = viewModel()) {
     val isSuperGraphicUltraModernGirlEnabled by settingsViewModel.isSuperGraphicUltraModernGirlEnabled
     val isExtractScreenQuickTileEnabled by settingsViewModel.isExtractScreenQuickTileEnabled
     val isAutoAddToSystemCalendarEnabled by settingsViewModel.isAutoAddToSystemCalendar
+    val isCheckUpdatesOnStartup by settingsViewModel.isCheckUpdatesOnStartup
     val context = LocalContext.current
     val requirePermission = stringResource(R.string.calendar_sync_permission_required)
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
@@ -229,6 +230,16 @@ fun GeneralScreen(settingsViewModel: SettingsViewModel = viewModel()) {
                     )
                 }, accessory = ListRowAccessory.SelectIndicator) {
                     Text(text = stringResource(R.string.language))
+                }
+            }
+            Section(
+                header = { stringResource(R.string.settings_section_updates) },
+                footer = { stringResource(R.string.check_for_updates_on_startup_footer) }
+            ) {
+                CustomSwitchRow(
+                    checked = isCheckUpdatesOnStartup,
+                    onCheckedChange = { settingsViewModel.onCheckUpdatesOnStartupChanged(it) }) {
+                    Text(stringResource(R.string.check_for_updates_on_startup))
                 }
             }
             Section(

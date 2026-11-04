@@ -511,6 +511,8 @@
     <string name="study_log_import_result_format">学习记录更新了 %1$d 天。</string>
 
     <!-- Settings: version and updates -->
+    <string name="settings_section_updates">更新</string>
+    <string name="check_for_updates_on_startup_footer">打开 Cresto 时检查，每天最多一次，有新版本才提示。</string>
     <string name="developed_by_nevoit_maintained_by_sure">由 Nevoit 开发 · Sure 维护</string>
     <string name="fork_maintainer">自用版维护</string>
     <string name="update_status_latest">已是最新</string>

@@ -174,22 +174,18 @@ fun SettingsScreen() {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         UpdateEntry(state = updateEntryState)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ConfigEntryItem(
+                            color = harmonize(Slate500),
+                            icon = painterResource(R.drawable.ic_twotone_info),
+                            title = stringResource(R.string.credits),
+                            onClick = {
+                                context.startActivity(
+                                    SettingsActivity.createIntent(context, SettingsDestination.CREDITS)
+                                )
+                            }
+                        )
                     }
-                }
-                VGap()
-            }
-            item {
-                ConfigContainer(backgroundColor = hierarchicalSurfaceColor) {
-                    ConfigEntryItem(
-                        color = harmonize(Slate500),
-                        icon = painterResource(R.drawable.ic_twotone_info),
-                        title = stringResource(R.string.credits),
-                        onClick = {
-                            context.startActivity(
-                                SettingsActivity.createIntent(context, SettingsDestination.CREDITS)
-                            )
-                        }
-                    )
                 }
             }
             paddingItem(lazyListState)
