@@ -33,6 +33,8 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nevoit.cresto.R
 import com.nevoit.cresto.feature.settings.update.UpdateEntry
+import com.nevoit.cresto.feature.settings.update.UpdateEntrySheet
+import com.nevoit.cresto.feature.settings.update.UpdateEntryState
 import com.nevoit.cresto.feature.settings.update.rememberUpdateEntryState
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
@@ -54,13 +56,12 @@ import com.nevoit.glasense.theme.tokens.Purple500
 import com.nevoit.glasense.theme.tokens.Slate500
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(updateEntryState: UpdateEntryState = rememberUpdateEntryState()) {
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     val hierarchicalSurfaceColor = AppColors.cardBackground
 
     val lazyListState = rememberLazyListState()
-    val updateEntryState = rememberUpdateEntryState()
 
     val isSmallTitleVisible by lazyListState.isScrolledPast(statusBarHeight + 24.dp)
 
@@ -225,5 +226,6 @@ fun SettingsScreen() {
                 )
             }
         }
+        UpdateEntrySheet(state = updateEntryState)
     }
 }

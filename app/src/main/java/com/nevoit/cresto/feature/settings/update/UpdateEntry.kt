@@ -25,7 +25,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class UpdateEntryState internal constructor(private val scope: CoroutineScope) {
+class UpdateEntryState internal constructor(
+    private val scope: CoroutineScope,
+    private val check: suspend () -> UpdateCheckResult
+) {
     var result by mutableStateOf<UpdateCheckResult?>(null)
         private set
     var isChecking by mutableStateOf(false)
@@ -43,7 +46,7 @@ class UpdateEntryState internal constructor(private val scope: CoroutineScope) {
         isChecking = true
         checkJob = scope.launch {
             try {
-                result = UpdateChecker.check()
+                result = check()
                 showSheet = result is UpdateCheckResult.HasUpdate
             } finally {
                 isChecking = false
@@ -75,9 +78,11 @@ class UpdateEntryState internal constructor(private val scope: CoroutineScope) {
 }
 
 @Composable
-fun rememberUpdateEntryState(): UpdateEntryState {
+fun rememberUpdateEntryState(
+    check: suspend () -> UpdateCheckResult = { UpdateChecker.check() }
+): UpdateEntryState {
     val scope = rememberCoroutineScope()
-    val state = remember(scope) { UpdateEntryState(scope) }
+    val state = remember(scope) { UpdateEntryState(scope, check) }
     // Keep results across list scrolling, but not across visits to this Activity.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { state.onStop() }
     return state
@@ -122,6 +127,12 @@ fun UpdateEntry(state: UpdateEntryState) {
         } else null,
         onClick = state::onClick
     )
+}
+
+/** Host in the page root, never a LazyColumn item: BottomSheet lays out using constraints.maxHeight. */
+@Composable
+fun UpdateEntrySheet(state: UpdateEntryState) {
+    val result = state.result
     if (state.showSheet && result is UpdateCheckResult.HasUpdate) {
         UpdateBottomSheet(updateInfo = result.updateInfo, onDismissed = state::dismissSheet)
     }
