@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 data class StudyPlanState(
     val plan: StudyPlan? = null,
@@ -70,6 +71,22 @@ class StudyPlanRepository private constructor(context: Context) {
         mmkv.encode(KEY_PATH, trimmed)
     }
 
+    suspend fun reset() = withContext(Dispatchers.IO) {
+        // Wait for cache loading and an in-flight refresh before removing their results.
+        refreshMutex.withLock {
+            for (file in listOf(cacheFile, File(cacheFile.parentFile, "${cacheFile.name}.part"))) {
+                if (file.exists() && !file.delete()) {
+                    throw IOException("Could not remove the study plan cache")
+                }
+            }
+            mmkv.clearAll()
+            _token.value = ""
+            _repository.value = DEFAULT_REPOSITORY
+            _path.value = DEFAULT_PATH
+            _state.value = StudyPlanState()
+        }
+    }
+
     /** Refreshes when the last attempt is older than [STALE_AFTER_MS]. */
     fun refreshIfStale() {
         val lastAttempt = mmkv.decodeLong(KEY_LAST_ATTEMPT_AT, 0L)
@@ -82,7 +99,7 @@ class StudyPlanRepository private constructor(context: Context) {
     }
 
     private suspend fun refreshNow() {
-        if (refreshMutex.isLocked) return
+        if (_state.value.isSyncing) return
         refreshMutex.withLock {
             if (_token.value.isBlank()) {
                 _state.update { it.copy(error = StudyPlanSyncError.NotConfigured, problem = null) }
@@ -117,13 +134,15 @@ class StudyPlanRepository private constructor(context: Context) {
     }
 
     private suspend fun loadCache() = withContext(Dispatchers.IO) {
-        val markdown = runCatching { cacheFile.takeIf { it.exists() }?.readText() }.getOrNull()
-            ?: return@withContext
-        val plan = (StudyPlanParser.parse(markdown) as? StudyPlanParseResult.Success)?.plan
-            ?: return@withContext
-        val syncedAt = mmkv.decodeLong(KEY_SYNCED_AT, 0L).takeIf { it > 0L }
-        _state.update { current ->
-            if (current.plan != null) current else current.copy(plan = plan, syncedAt = syncedAt)
+        refreshMutex.withLock {
+            val markdown = runCatching { cacheFile.takeIf { it.exists() }?.readText() }.getOrNull()
+                ?: return@withLock
+            val plan = (StudyPlanParser.parse(markdown) as? StudyPlanParseResult.Success)?.plan
+                ?: return@withLock
+            val syncedAt = mmkv.decodeLong(KEY_SYNCED_AT, 0L).takeIf { it > 0L }
+            _state.update { current ->
+                if (current.plan != null) current else current.copy(plan = plan, syncedAt = syncedAt)
+            }
         }
     }
 

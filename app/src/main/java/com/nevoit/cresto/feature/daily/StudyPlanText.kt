@@ -51,6 +51,9 @@ internal fun StudyPlanSyncError.message(problem: StudyPlanProblem?): String {
                 }
 
                 StudyPlanProblem.BadWeekDates -> stringResource(R.string.study_problem_bad_week_dates)
+                StudyPlanProblem.DuplicateWeekNumber -> {
+                    stringResource(R.string.study_problem_duplicate_week_number)
+                }
             }
         )
     }

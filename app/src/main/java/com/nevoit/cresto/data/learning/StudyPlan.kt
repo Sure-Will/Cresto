@@ -57,7 +57,8 @@ enum class StudyPlanProblem {
     MissingStartDate,
     MissingWeeks,
     MissingWeekColumns,
-    BadWeekDates
+    BadWeekDates,
+    DuplicateWeekNumber
 }
 
 sealed interface StudyPlanParseResult {
@@ -171,9 +172,13 @@ object StudyPlanParser {
 
         // Rows are in date order, so each week is anchored to the previous one.
         var anchor = startDate
+        val weekNumbers = mutableSetOf<Int>()
         val weeks = table.rows.mapNotNull { row ->
             val number = row.cell(numberColumn).filter(Char::isDigit).toIntOrNull()
                 ?: return@mapNotNull null
+            if (!weekNumbers.add(number)) {
+                return WeeksResult.Failure(StudyPlanProblem.DuplicateWeekNumber)
+            }
             val dates = datesIn(row.cell(dateColumn), anchor)
             if (dates.size < 2 || dates[1].isBefore(dates[0])) {
                 return WeeksResult.Failure(StudyPlanProblem.BadWeekDates)

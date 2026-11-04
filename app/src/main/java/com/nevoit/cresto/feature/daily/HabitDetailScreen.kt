@@ -217,7 +217,7 @@ fun HabitDetailScreen(habitId: String) {
                         }
                         val canCheckIn = !selectedDate.isAfter(today)
                         Row(
-                            key = "check-in-add",
+                            key = "check-in-action/add",
                             enabled = canCheckIn,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)

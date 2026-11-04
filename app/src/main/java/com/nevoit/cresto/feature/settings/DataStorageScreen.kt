@@ -53,6 +53,7 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.shapes.Capsule
 import com.nevoit.cresto.R
+import com.nevoit.cresto.data.learning.StudyPlanRepository
 import com.nevoit.cresto.data.routine.HabitBackupException
 import com.nevoit.cresto.data.routine.HabitRepository
 import com.nevoit.cresto.data.todo.DuplicatePolicy
@@ -78,7 +79,9 @@ import com.nevoit.glasense.theme.tokens.Amber400
 import com.nevoit.glasense.theme.tokens.Emerald400
 import com.nevoit.glasense.theme.tokens.Slate500
 import com.tencent.mmkv.MMKV
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
@@ -94,6 +97,10 @@ fun DataStorageScreen() {
     val activity = LocalActivity.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val habitRepository = remember { HabitRepository.get(context) }
+    val studyPlanRepository = remember { StudyPlanRepository.get(context) }
+    val errorText = stringResource(R.string.error)
+    val okText = stringResource(R.string.ok)
 
     // State variables to hold storage information
     val calculatingText = stringResource(R.string.calculating)
@@ -183,6 +190,14 @@ fun DataStorageScreen() {
         dialogState = dialogState.copy(isVisible = false)
     }
 
+    fun showMessage(title: String, message: String?) {
+        showDialog(
+            items = listOf(DialogItemData(okText, onClick = { dismissDialog() }, isPrimary = true)),
+            title = title,
+            message = message
+        )
+    }
+
     val dialogItems = listOf(
         DialogItemData(
             stringResource(R.string.cancel),
@@ -193,10 +208,21 @@ fun DataStorageScreen() {
             stringResource(R.string.clear),
             onClick = {
                 scope.launch {
-                    viewModel.clearAllData()
+                    try {
+                        // A confirmed clear must finish even if the screen is recreated or closed.
+                        withContext(NonCancellable + Dispatchers.IO) {
+                            viewModel.clearAllData()
+                            habitRepository.clearAll()
+                            studyPlanRepository.reset()
+                        }
+                        dismissDialog()
+                        activity?.finish()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        showMessage(errorText, e.message)
+                    }
                 }
-                dismissDialog()
-                activity?.finish()
             },
             isPrimary = true,
             isDestructive = true
@@ -212,9 +238,18 @@ fun DataStorageScreen() {
             stringResource(R.string.reset),
             onClick = {
                 scope.launch {
-                    MMKV.defaultMMKV().clearAll()
+                    try {
+                        withContext(NonCancellable + Dispatchers.IO) {
+                            studyPlanRepository.reset()
+                            MMKV.defaultMMKV().clearAll()
+                        }
+                        dismissDialog()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        showMessage(errorText, e.message)
+                    }
                 }
-                dismissDialog()
             },
             isPrimary = true,
             isDestructive = true
@@ -255,7 +290,6 @@ fun DataStorageScreen() {
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
 
     val cancelText = stringResource(R.string.cancel)
-    val okText = stringResource(R.string.ok)
 
     val exportFailedText = stringResource(R.string.export_failed)
     val importFailedText = stringResource(R.string.import_failed)
@@ -414,31 +448,28 @@ fun DataStorageScreen() {
         }
     }
 
-    val habitRepository = remember { HabitRepository.get(context) }
-    var pendingHabitExportJson by remember { mutableStateOf<String?>(null) }
     val habitImportNotJsonText = stringResource(R.string.habit_import_not_json)
     val habitImportNoHabitsText = stringResource(R.string.habit_import_no_habits)
     val habitImportResultText = stringResource(R.string.habit_import_result_format)
 
-    fun showMessage(title: String, message: String?) {
-        showDialog(
-            items = listOf(DialogItemData(okText, onClick = { dismissDialog() }, isPrimary = true)),
-            title = title,
-            message = message
-        )
-    }
-
     val createHabitFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
-        val json = pendingHabitExportJson
-        pendingHabitExportJson = null
-        if (uri == null || json == null) return@rememberLauncherForActivityResult
-        runCatching<Unit> {
-            context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
-                writer.write(json)
-            } ?: error(openOutputStreamFailedText)
-        }.onFailure { e -> showMessage(exportFailedText, e.message) }
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            try {
+                val json = habitRepository.export()
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
+                        writer.write(json)
+                    } ?: error(openOutputStreamFailedText)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                showMessage(exportFailedText, e.message)
+            }
+        }
     }
 
     val openHabitFileLauncher = rememberLauncherForActivityResult(
@@ -580,16 +611,9 @@ fun DataStorageScreen() {
             ) {
                 Row(
                     onClick = {
-                        scope.launch {
-                            runCatching { habitRepository.export() }
-                                .onSuccess { json ->
-                                    pendingHabitExportJson = json
-                                    val ts = LocalDateTime.now()
-                                        .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-                                    createHabitFileLauncher.launch("cresto_habits_$ts.json")
-                                }
-                                .onFailure { e -> showMessage(exportFailedText, e.message) }
-                        }
+                        val ts = LocalDateTime.now()
+                            .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+                        createHabitFileLauncher.launch("cresto_habits_$ts.json")
                     }
                 ) {
                     Text(

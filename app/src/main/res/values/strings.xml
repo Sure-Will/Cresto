@@ -474,6 +474,7 @@
     <string name="study_problem_missing_weeks">the “## 十二周” table is missing</string>
     <string name="study_problem_missing_week_columns">the weeks table needs 周 and 日期 columns</string>
     <string name="study_problem_bad_week_dates">a week has dates that cannot be read</string>
+    <string name="study_problem_duplicate_week_number">the weeks table has duplicate week numbers</string>
 
     <!-- Daily page: habits -->
     <string name="habits">Habits</string>

@@ -52,6 +52,18 @@ interface HabitDao {
     @Query("DELETE FROM habit_check_ins WHERE id = :id")
     suspend fun deleteCheckIn(id: String)
 
+    @Query("DELETE FROM habit_check_ins")
+    suspend fun deleteAllCheckIns()
+
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+
+    @Transaction
+    suspend fun clearAll() {
+        deleteAllCheckIns()
+        deleteAllHabits()
+    }
+
     @Transaction
     suspend fun deleteHabit(id: String) {
         deleteCheckInsOf(id)

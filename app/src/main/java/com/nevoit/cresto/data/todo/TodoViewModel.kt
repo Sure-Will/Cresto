@@ -568,13 +568,10 @@ class TodoViewModel(
         )
     )
 
-    fun clearAllData() {
-        viewModelScope.launch {
-            alarmScheduler.cancelAll(repository.getReminderTodosSnapshot().map { it.id })
-            repository.deleteAll()
-            // clear settings
-            MMKV.defaultMMKV().clearAll()
-        }
+    suspend fun clearAllData() {
+        alarmScheduler.cancelAll(repository.getReminderTodosSnapshot().map { it.id })
+        repository.deleteAll()
+        MMKV.defaultMMKV().clearAll()
     }
 
     private val _backupUiState = MutableStateFlow(BackupUiState())

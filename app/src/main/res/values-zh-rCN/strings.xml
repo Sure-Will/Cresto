@@ -459,6 +459,7 @@
     <string name="study_problem_missing_weeks">缺少「## 十二周」表</string>
     <string name="study_problem_missing_week_columns">十二周表缺少「周」或「日期」列</string>
     <string name="study_problem_bad_week_dates">有一周的日期无法识别</string>
+    <string name="study_problem_duplicate_week_number">十二周表存在重复周号</string>
 
     <!-- Daily page: habits -->
     <string name="habits">习惯</string>

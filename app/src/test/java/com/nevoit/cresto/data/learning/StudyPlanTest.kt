@@ -133,6 +133,17 @@ class StudyPlanTest {
     }
 
     @Test
+    fun rejectsDuplicateWeekNumbers() {
+        val duplicated = sample.replace("| 2 | 11/09–11/15 |", "| 1 | 11/09–11/15 |")
+        assertProblem(StudyPlanProblem.DuplicateWeekNumber, duplicated)
+    }
+
+    @Test
+    fun acceptsNonconsecutiveWeekNumbers() {
+        assertEquals(listOf(1, 2, 9, 12), parseOrFail(sample).weeks.map { it.number })
+    }
+
+    @Test
     fun dayBeforeStartPointsAtFirstSession() {
         val day = StudyPlanSchedule.dayOf(plan, LocalDate.of(2026, 11, 2))
         assertTrue(day is StudyDay.BeforeStart)
