@@ -451,6 +451,7 @@ fun DataStorageScreen() {
     val habitImportNotJsonText = stringResource(R.string.habit_import_not_json)
     val habitImportNoHabitsText = stringResource(R.string.habit_import_no_habits)
     val habitImportResultText = stringResource(R.string.habit_import_result_format)
+    val studyLogImportResultText = stringResource(R.string.study_log_import_result_format)
 
     val createHabitFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -490,7 +491,11 @@ fun DataStorageScreen() {
                         result.habitsAdded,
                         result.habitsMerged,
                         result.checkInsAdded
-                    )
+                    ) + if (result.studyLogsChanged > 0) {
+                        " " + String.format(studyLogImportResultText, result.studyLogsChanged)
+                    } else {
+                        ""
+                    }
                 )
             }.onFailure { e ->
                 val message = when ((e as? HabitBackupException)?.problem) {

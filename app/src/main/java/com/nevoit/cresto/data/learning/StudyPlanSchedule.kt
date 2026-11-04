@@ -2,12 +2,16 @@ package com.nevoit.cresto.data.learning
 
 import java.time.LocalDate
 
+/** Which line of the plan a session belongs to. [index] orders the lines and picks a colour. */
+data class StudyStrand(val name: String, val index: Int, val isReview: Boolean)
+
 /** What a single evening asks for. */
 data class StudySession(
     val label: String,
     val task: String,
     val focus: String?,
-    val output: String
+    val output: String,
+    val strand: StudyStrand
 )
 
 data class UpcomingSession(val date: LocalDate, val session: StudySession)
@@ -61,32 +65,59 @@ object StudyPlanSchedule {
      */
     fun sessionOn(plan: StudyPlan, date: LocalDate): StudySession? {
         val week = weekOf(plan, date) ?: return null
+        val slot = plan.slots.firstOrNull { it.isSession && date.dayOfWeek in it.days }
+        val track = if (slot == null || slot.isEvening) {
+            week.tracks.firstOrNull { it.day == date.dayOfWeek }
+                ?: week.tracks.firstOrNull { it.day == null }
+        } else {
+            null
+        }
+        val strand = strandOf(week, slot, track)
+
         plan.nights.firstOrNull { it.date == date }?.let { night ->
             return StudySession(
                 label = night.label,
                 task = night.task,
                 focus = null,
-                output = night.output
+                output = night.output,
+                strand = strand
             )
         }
 
-        val slot = plan.slots.firstOrNull { it.isSession && date.dayOfWeek in it.days }
-            ?: return null
-        val trackText = if (slot.isEvening) {
-            (week.tracks.firstOrNull { it.day == date.dayOfWeek }
-                ?: week.tracks.firstOrNull { it.day == null })
-                ?.text
-                ?.takeIf { it.isNotBlank() }
-        } else {
-            null
-        }
+        slot ?: return null
+        val trackText = track?.text?.takeIf { it.isNotBlank() }
         return StudySession(
             label = slot.label,
             task = trackText ?: slot.content,
             focus = slot.content.takeIf { trackText != null && it.isNotBlank() },
-            output = slot.output
+            output = slot.output,
+            strand = strand
         )
     }
+
+    /** Every day of [week] in order, with the session it asks for, or null on a free day. */
+    fun sessionsIn(plan: StudyPlan, week: StudyWeek): List<Pair<LocalDate, StudySession?>> =
+        generateSequence(week.start) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(week.end) }
+            .map { it to sessionOn(plan, it) }
+            .toList()
+
+    private fun strandOf(week: StudyWeek, slot: StudySlot?, track: StudyTrack?): StudyStrand =
+        when {
+            slot != null && !slot.isEvening -> StudyStrand(
+                name = slot.content.ifBlank { slot.label },
+                index = week.tracks.size,
+                isReview = true
+            )
+
+            track != null -> StudyStrand(
+                name = track.name.substringBefore('（').substringBefore('(').trim(),
+                index = week.tracks.indexOf(track),
+                isReview = false
+            )
+
+            else -> StudyStrand(name = slot?.label.orEmpty(), index = 0, isReview = false)
+        }
 
     private fun nextSession(plan: StudyPlan, from: LocalDate): UpcomingSession? {
         return (0 until LOOKAHEAD_DAYS)

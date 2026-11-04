@@ -3,9 +3,8 @@ package com.nevoit.cresto.feature.daily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -39,13 +38,8 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.shapes.Capsule
 import com.nevoit.cresto.R
-import com.nevoit.cresto.data.learning.StudyDay
 import com.nevoit.cresto.data.learning.StudyPlanRepository
 import com.nevoit.cresto.data.learning.StudyPlanSchedule
-import com.nevoit.cresto.data.learning.StudyPlanState
-import com.nevoit.cresto.data.learning.StudyPlanSyncError
-import com.nevoit.cresto.data.learning.StudySession
-import com.nevoit.cresto.data.learning.StudySlot
 import com.nevoit.cresto.data.routine.HabitRepository
 import com.nevoit.cresto.data.routine.HabitStats
 import com.nevoit.cresto.theme.AppButtonColors
@@ -60,7 +54,6 @@ import com.nevoit.cresto.ui.components.glasense.MainPageActionVisualInset
 import com.nevoit.cresto.ui.components.glasense.MainPageTitle
 import com.nevoit.cresto.ui.components.glasense.mainPageTopBarPlacement
 import com.nevoit.cresto.ui.components.glasense.mainPageTopContentSpacer
-import com.nevoit.cresto.ui.components.packed.CardWithTitle
 import com.nevoit.cresto.ui.components.packed.PageContent
 import com.nevoit.glasense.component.paddingItem
 import com.nevoit.glasense.core.component.Text
@@ -85,6 +78,10 @@ fun BoxScope.DailyScreen() {
 
     val habitRepository = remember { HabitRepository.get(context) }
     val entries by habitRepository.entries.collectAsStateWithLifecycle(initialValue = null)
+    val studyLogs by habitRepository.studyLogs.collectAsStateWithLifecycle(initialValue = emptyList())
+    val logsByDate = remember(studyLogs) { studyLogs.associateBy { it.date } }
+    val openPlan = { context.startActivity(StudyPlanActivity.createIntent(context)) }
+    val openDay = { date: LocalDate -> context.startActivity(StudyLogActivity.createIntent(context, date)) }
     var isAdding by rememberSaveable { mutableStateOf(false) }
     var newHabitName by rememberSaveable { mutableStateOf("") }
 
@@ -139,12 +136,51 @@ fun BoxScope.DailyScreen() {
         item(key = "top") {
             Spacer(modifier = Modifier.mainPageTopContentSpacer())
         }
+        item(key = "study-title") {
+            Row(
+                modifier = Modifier.padding(start = 12.dp, end = 4.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.study),
+                    style = GlasenseTheme.type.title3Emphasized,
+                    color = AppColors.content,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.study_full_plan) + " ›",
+                    style = GlasenseTheme.type.subHeadline,
+                    color = AppColors.primary,
+                    modifier = Modifier
+                        .clip(AppSpecs.cardShape)
+                        .clickable(onClick = openPlan)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
         item(key = "tonight") {
-            TonightCard(
+            StudyTonightCard(
                 state = planState,
                 today = today,
-                onClick = { context.startActivity(StudyPlanActivity.createIntent(context)) }
+                logs = logsByDate,
+                onOpenDay = openDay,
+                onOpenPlan = openPlan,
+                onToggleDone = { date, session, done ->
+                    habitRepository.setStudyDone(date, done, session.task, session.strand.name)
+                }
             )
+        }
+        val plan = planState.plan
+        if (plan != null && today.calendarWeek().any { StudyPlanSchedule.weekOf(plan, it) != null }) {
+            item(key = "study-week") {
+                StudyWeekStrip(
+                    plan = plan,
+                    today = today,
+                    logs = logsByDate,
+                    onOpenDay = openDay,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
         item(key = "habits-title") {
             Text(
@@ -253,157 +289,4 @@ fun BoxScope.DailyScreen() {
             )
         }
     }
-}
-
-@Composable
-private fun TonightCard(
-    state: StudyPlanState,
-    today: LocalDate,
-    onClick: () -> Unit
-) {
-    CardWithTitle(
-        icon = painterResource(R.drawable.ic_mountain),
-        title = stringResource(R.string.study_tonight),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppSpecs.cardShape)
-            .clickable(onClick = onClick)
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            val plan = state.plan
-            if (plan == null) {
-                val error = state.error?.takeUnless { it == StudyPlanSyncError.NotConfigured }
-                Text(
-                    text = error?.message(state.problem)
-                        ?: stringResource(R.string.study_not_configured),
-                    style = GlasenseTheme.type.body,
-                    color = AppColors.contentVariant
-                )
-            } else {
-                StudyDayContent(StudyPlanSchedule.dayOf(plan, today))
-                state.statusMessage()?.let { status ->
-                    Text(
-                        text = status,
-                        style = GlasenseTheme.type.footnote,
-                        color = AppColors.contentVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StudyDayContent(day: StudyDay) {
-    when (day) {
-        is StudyDay.InWeek -> {
-            Text(
-                text = stringResource(
-                    R.string.study_week_format,
-                    day.week.number,
-                    day.week.dateRange()
-                ),
-                style = GlasenseTheme.type.footnote,
-                color = AppColors.contentVariant
-            )
-            val session = day.session
-            if (session != null) {
-                StudySessionBlock(session)
-            } else {
-                Text(
-                    text = stringResource(R.string.study_no_session_today),
-                    style = GlasenseTheme.type.headline,
-                    color = AppColors.content
-                )
-                day.next?.let { next ->
-                    Text(
-                        text = stringResource(
-                            R.string.study_next_session_format,
-                            next.date.studyLabel(),
-                            next.session.task
-                        ),
-                        style = GlasenseTheme.type.subHeadline,
-                        color = AppColors.contentVariant
-                    )
-                }
-            }
-            day.dailySlots.forEach { slot -> DailySlotLine(slot) }
-            if (day.week.acceptance.isNotBlank()) {
-                Text(
-                    text = stringResource(R.string.study_acceptance_format, day.week.acceptance),
-                    style = GlasenseTheme.type.footnote,
-                    color = AppColors.contentVariant
-                )
-            }
-        }
-
-        is StudyDay.BeforeStart -> {
-            Text(
-                text = stringResource(R.string.study_before_start_format, day.startDate.studyLabel()),
-                style = GlasenseTheme.type.headline,
-                color = AppColors.content
-            )
-            day.first?.let { first ->
-                Text(
-                    text = stringResource(
-                        R.string.study_next_session_format,
-                        first.date.studyLabel(),
-                        first.session.task
-                    ),
-                    style = GlasenseTheme.type.subHeadline,
-                    color = AppColors.contentVariant
-                )
-            }
-        }
-
-        is StudyDay.Finished -> Text(
-            text = stringResource(R.string.study_finished_format, day.lastWeek.number),
-            style = GlasenseTheme.type.headline,
-            color = AppColors.content
-        )
-
-        is StudyDay.Unscheduled -> Text(
-            text = stringResource(R.string.study_unscheduled),
-            style = GlasenseTheme.type.headline,
-            color = AppColors.content
-        )
-    }
-}
-
-@Composable
-internal fun StudySessionBlock(session: StudySession) {
-    Text(
-        text = session.label,
-        style = GlasenseTheme.type.subHeadlineEmphasized,
-        color = AppColors.primary
-    )
-    Text(
-        text = session.task,
-        style = GlasenseTheme.type.headline,
-        color = AppColors.content
-    )
-    session.focus?.let { focus ->
-        Text(
-            text = focus,
-            style = GlasenseTheme.type.subHeadline,
-            color = AppColors.contentVariant
-        )
-    }
-    if (session.output.isNotBlank()) {
-        Text(
-            text = stringResource(R.string.study_output_format, session.output),
-            style = GlasenseTheme.type.subHeadline,
-            color = AppColors.contentVariant
-        )
-    }
-}
-
-@Composable
-private fun DailySlotLine(slot: StudySlot) {
-    val detail = listOf(slot.content, slot.output).filter { it.isNotBlank() }.joinToString("：")
-    Text(
-        text = stringResource(R.string.study_daily_slot_format, slot.label, detail),
-        style = GlasenseTheme.type.footnote,
-        color = AppColors.contentVariant
-    )
 }

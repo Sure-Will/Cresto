@@ -1,10 +1,14 @@
 package com.nevoit.cresto.feature.daily
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,9 +26,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush.Companion.sweepGradient
@@ -34,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +51,8 @@ import com.nevoit.cresto.data.learning.StudyPlan
 import com.nevoit.cresto.data.learning.StudyPlanRepository
 import com.nevoit.cresto.data.learning.StudyPlanSchedule
 import com.nevoit.cresto.data.learning.StudyWeek
+import com.nevoit.cresto.data.routine.HabitRepository
+import com.nevoit.cresto.data.routine.StudyLog
 import com.nevoit.cresto.theme.AppButtonColors
 import com.nevoit.cresto.theme.AppColors
 import com.nevoit.cresto.theme.AppSpecs
@@ -51,7 +60,6 @@ import com.nevoit.cresto.theme.harmonize
 import com.nevoit.cresto.ui.components.glasense.GlasenseButton
 import com.nevoit.cresto.ui.components.glasense.GlasenseDynamicSmallTitle
 import com.nevoit.cresto.ui.components.glasense.isScrolledPast
-import com.nevoit.cresto.ui.components.packed.CardWithTitle
 import com.nevoit.cresto.ui.components.packed.ConfigInfoHeader
 import com.nevoit.cresto.ui.components.packed.ConfigTextField
 import com.nevoit.cresto.ui.components.packed.TopBarSpacer
@@ -78,6 +86,11 @@ fun StudyPlanScreen() {
     val path by repository.path.collectAsStateWithLifecycle()
     val token by repository.token.collectAsStateWithLifecycle()
     var today by remember { mutableStateOf(LocalDate.now()) }
+    val habitRepository = remember { HabitRepository.get(context) }
+    val studyLogs by habitRepository.studyLogs.collectAsStateWithLifecycle(initialValue = emptyList())
+    val logsByDate = remember(studyLogs) { studyLogs.associateBy { it.date } }
+    var expandedWeeks by rememberSaveable { mutableStateOf<Set<Int>?>(null) }
+    val openDay = { date: LocalDate -> context.startActivity(StudyLogActivity.createIntent(context, date)) }
 
     LifecycleResumeEffect(Unit) {
         today = LocalDate.now()
@@ -131,7 +144,18 @@ fun StudyPlanScreen() {
             item { VGap(24.dp) }
 
             if (plan != null) {
-                planSections(plan, today)
+                val expanded = expandedWeeks
+                    ?: setOfNotNull(StudyPlanSchedule.weekOf(plan, today)?.number)
+                planSections(
+                    plan = plan,
+                    today = today,
+                    logs = logsByDate,
+                    expandedWeeks = expanded,
+                    onToggleWeek = { number ->
+                        expandedWeeks = if (number in expanded) expanded - number else expanded + number
+                    },
+                    onOpenDay = openDay
+                )
             }
 
             item {
@@ -241,43 +265,110 @@ fun StudyPlanScreen() {
     }
 }
 
-private fun ListScope.planSections(plan: StudyPlan, today: LocalDate) {
+private fun ListScope.planSections(
+    plan: StudyPlan,
+    today: LocalDate,
+    logs: Map<LocalDate, StudyLog>,
+    expandedWeeks: Set<Int>,
+    onToggleWeek: (Int) -> Unit,
+    onOpenDay: (LocalDate) -> Unit
+) {
     val currentWeek = StudyPlanSchedule.weekOf(plan, today)
 
     currentWeek?.let { week ->
         item {
-            CardWithTitle(
-                title = stringResource(R.string.study_current_week) + " · " +
-                    stringResource(R.string.study_week_format, week.number, week.dateRange()),
-                modifier = Modifier.padding(horizontal = 12.dp)
-            ) {
-                WeekDetails(week)
-            }
+            CurrentWeekCard(plan, week, today, logs, onOpenDay)
             VGap(24.dp)
         }
     }
 
     Section(header = { stringResource(R.string.study_weeks) }) {
         plan.weeks.forEach { week ->
-            Row(key = "week-${week.number}") {
+            val expanded = week.number in expandedWeeks
+            Row(key = "week-${week.number}", onClick = { onToggleWeek(week.number) }) {
+                val isCurrent = week == currentWeek
+                val isPast = week.end.isBefore(today)
+                val progress = weekProgress(plan, week, logs)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val isCurrent = week == currentWeek
-                    val isPast = week.end.isBefore(today)
-                    Text(
-                        text = stringResource(R.string.study_week_format, week.number, week.dateRange()),
-                        style = GlasenseTheme.type.subHeadlineEmphasized,
-                        color = when {
-                            isCurrent -> AppColors.primary
-                            isPast -> AppColors.contentVariant
-                            else -> AppColors.content
+                    androidx.compose.foundation.layout.Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.study_week_format, week.number, week.dateRange()),
+                            style = GlasenseTheme.type.subHeadlineEmphasized,
+                            color = when {
+                                isCurrent -> AppColors.primary
+                                isPast -> AppColors.contentVariant
+                                else -> AppColors.content
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (progress.done > 0 || isPast || isCurrent) {
+                            Text(
+                                text = stringResource(
+                                    R.string.study_week_done_format,
+                                    progress.done,
+                                    progress.total
+                                ),
+                                style = GlasenseTheme.type.footnote,
+                                color = AppColors.contentVariant
+                            )
+                            Spacer(Modifier.width(6.dp))
                         }
-                    )
-                    WeekDetails(week, dimmed = isPast)
+                        Icon(
+                            painter = painterResource(
+                                if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down
+                            ),
+                            contentDescription = null,
+                            tint = AppColors.contentVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    if (progress.done > 0 || isCurrent) {
+                        ProgressBar(
+                            fraction = progress.fraction,
+                            color = if (isCurrent) AppColors.primary else AppColors.contentVariant
+                        )
+                    }
+                    AnimatedVisibility(visible = expanded) {
+                        WeekDetails(week, dimmed = isPast)
+                    }
+                }
+            }
+        }
+    }
+
+    val notes = logs.values.filter { it.note.isNotBlank() }.sortedByDescending { it.date }
+    if (notes.isNotEmpty()) {
+        Section(header = { stringResource(R.string.study_recent_notes) }) {
+            notes.forEach { log ->
+                Row(key = "note-${log.date}", onClick = { onOpenDay(log.date) }) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = listOf(log.date.studyLabel(), log.strand)
+                                .filter { it.isNotBlank() }
+                                .joinToString(" · "),
+                            style = GlasenseTheme.type.footnote,
+                            color = AppColors.contentVariant
+                        )
+                        Text(
+                            text = log.note,
+                            style = GlasenseTheme.type.subHeadline,
+                            color = AppColors.content,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
@@ -333,16 +424,126 @@ private fun ListScope.planSections(plan: StudyPlan, today: LocalDate) {
     item { VGap(24.dp) }
 }
 
+/** This week day by day: what each evening asks for, and whether it is done. */
+@Composable
+private fun CurrentWeekCard(
+    plan: StudyPlan,
+    week: StudyWeek,
+    today: LocalDate,
+    logs: Map<LocalDate, StudyLog>,
+    onOpenDay: (LocalDate) -> Unit
+) {
+    val progress = weekProgress(plan, week, logs)
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .fillMaxWidth()
+            .background(AppColors.cardBackground, AppSpecs.cardShape)
+            .padding(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.study_current_week) + " · " +
+                    stringResource(R.string.study_week_progress_format, week.number, progress.done, progress.total),
+                style = GlasenseTheme.type.subHeadline,
+                color = AppColors.contentVariant
+            )
+            ProgressBar(fraction = progress.fraction, color = AppColors.primary)
+        }
+        StudyPlanSchedule.sessionsIn(plan, week).forEach { (date, session) ->
+            if (session == null && logs[date] == null) return@forEach
+            val log = logs[date]
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenDay(date) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(session?.strand?.color() ?: AppColors.contentVariant)
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = listOfNotNull(date.studyLabel(), session?.strand?.name)
+                            .joinToString(" · "),
+                        style = GlasenseTheme.type.footnote,
+                        color = if (date == today) AppColors.primary else AppColors.contentVariant
+                    )
+                    Text(
+                        text = session?.task ?: log?.task.orEmpty(),
+                        style = GlasenseTheme.type.subHeadline,
+                        color = AppColors.content,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (log?.note?.isNotBlank() == true) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_square_and_pencil),
+                        contentDescription = stringResource(R.string.study_note),
+                        tint = AppColors.contentVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+                if (log?.done == true) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_checkmark),
+                        contentDescription = stringResource(R.string.study_done),
+                        tint = session?.strand?.color() ?: AppColors.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+        if (week.acceptance.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.study_acceptance_format, week.acceptance),
+                style = GlasenseTheme.type.footnote,
+                color = AppColors.contentVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
 @Composable
 private fun WeekDetails(week: StudyWeek, dimmed: Boolean = false) {
     val color = if (dimmed) AppColors.contentVariant else AppColors.content
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        week.tracks.filter { it.text.isNotBlank() }.forEach { track ->
-            Text(
-                text = "${track.name}：${track.text}",
-                style = GlasenseTheme.type.subHeadline,
-                color = color
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        week.tracks.forEachIndexed { index, track ->
+            if (track.text.isBlank()) return@forEachIndexed
+            androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.Top) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(trackColor(index))
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = track.name,
+                        style = GlasenseTheme.type.footnoteEmphasized,
+                        color = AppColors.contentVariant
+                    )
+                    Text(
+                        text = track.text,
+                        style = GlasenseTheme.type.subHeadline,
+                        color = color
+                    )
+                }
+            }
         }
         if (week.acceptance.isNotBlank()) {
             Text(

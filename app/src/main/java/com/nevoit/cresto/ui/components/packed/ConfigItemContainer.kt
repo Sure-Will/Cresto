@@ -133,7 +133,8 @@ fun ConfigTextField(
                 minLines = minLines,
                 maxLines = maxLines,
                 decorationBox = { innerTextField ->
-                    Box(contentAlignment = Alignment.CenterStart) {
+                    // A tall field starts typing at the top, so its hint sits there too.
+                    Box(contentAlignment = if (minLines > 1) Alignment.TopStart else Alignment.CenterStart) {
                         if (decorateText != null && value.isEmpty()) {
                             Text(
                                 text = decorateText,

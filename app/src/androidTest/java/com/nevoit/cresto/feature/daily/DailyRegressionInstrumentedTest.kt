@@ -61,6 +61,7 @@ class DailyRegressionInstrumentedTest {
     private val habitRepository get() = HabitRepository.get(context)
     private val planRepository get() = StudyPlanRepository.get(context)
     private val dao get() = RoutineDatabase.get(context).habitDao()
+    private val studyLogDao get() = RoutineDatabase.get(context).studyLogDao()
     private val planCache get() = File(context.filesDir, "study-plan/plan.md")
     private val temporaryFiles = mutableListOf<File>()
     private val verticalList = hasScrollToIndexAction() and
@@ -81,13 +82,17 @@ class DailyRegressionInstrumentedTest {
     @Test
     fun clearAllData_removesHabitsCheckInsAndIndependentStudyStorage() {
         configureStudyPlan()
+        habitRepository.setStudyNote(STUDY_LOG_DATE, "Regression note", "", "")
+        compose.waitUntil(5_000) { runBlocking { studyLogDao.get(STUDY_LOG_DATE) != null } }
         showStorage()
 
         clickStorageRow(R.string.clear_all_data)
         compose.onNode(hasText(context.getString(R.string.clear)) and hasClickAction()).performClick()
 
         compose.waitUntil(5_000) {
-            runBlocking { dao.habits().isEmpty() && dao.checkIns().isEmpty() } && studyPlanIsReset()
+            runBlocking {
+                dao.habits().isEmpty() && dao.checkIns().isEmpty() && studyLogDao.all().isEmpty()
+            } && studyPlanIsReset()
         }
         assertStudyPlanReset()
     }
@@ -129,7 +134,9 @@ class DailyRegressionInstrumentedTest {
             runBlocking { withTimeout(5_000) { lockedTransaction.await() } }
 
             compose.waitUntil(5_000) {
-                runBlocking { dao.habits().isEmpty() && dao.checkIns().isEmpty() } && studyPlanIsReset()
+                runBlocking {
+                dao.habits().isEmpty() && dao.checkIns().isEmpty() && studyLogDao.all().isEmpty()
+            } && studyPlanIsReset()
             }
             assertStudyPlanReset()
         } finally {
@@ -262,7 +269,10 @@ class DailyRegressionInstrumentedTest {
             !planCache.exists()
 
     private fun removeTestData() {
-        runBlocking { dao.habits().forEach { dao.deleteHabit(it.id) } }
+        runBlocking {
+            dao.habits().forEach { dao.deleteHabit(it.id) }
+            studyLogDao.delete(STUDY_LOG_DATE)
+        }
         planRepository.setToken("")
         planRepository.setRepository(StudyPlanRepository.DEFAULT_REPOSITORY)
         planRepository.setPath(StudyPlanRepository.DEFAULT_PATH)
@@ -292,5 +302,6 @@ class DailyRegressionInstrumentedTest {
 
     private companion object {
         const val HABIT_ID = "daily-regression-habit"
+        val STUDY_LOG_DATE: LocalDate = LocalDate.of(2000, 1, 1)
     }
 }

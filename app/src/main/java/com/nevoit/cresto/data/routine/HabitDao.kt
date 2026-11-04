@@ -94,5 +94,6 @@ interface HabitDao {
 data class HabitImportResult(
     val habitsAdded: Int,
     val habitsMerged: Int,
-    val checkInsAdded: Int
+    val checkInsAdded: Int,
+    val studyLogsChanged: Int = 0
 )

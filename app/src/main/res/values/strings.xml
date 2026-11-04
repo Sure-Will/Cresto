@@ -495,10 +495,10 @@
     <string name="habit_delete">Delete habit</string>
     <string name="habit_delete_message">This deletes the habit and its %1$s. It cannot be undone.</string>
     <string name="habit_delete_check_in">Delete check-in</string>
-    <string name="habit_backup">Habits (Daily-Track)</string>
+    <string name="habit_backup">Habits and study records</string>
     <string name="habit_export">Export habits</string>
     <string name="habit_import">Import habits</string>
-    <string name="habit_backup_footer">Uses the Daily-Track backup format, so either app can read the other\'s file. Importing merges by ID and never deletes anything.</string>
+    <string name="habit_backup_footer">Habits use the Daily-Track backup format, so either app can read the other\'s file. Study progress and notes are exported too. Importing merges by ID and date and never deletes anything.</string>
     <string name="habit_import_result_format">%1$d new habits, %2$d merged, %3$d new check-ins.</string>
     <string name="habit_import_not_json">The file is not valid JSON.</string>
     <string name="habit_import_no_habits">No habits were found in this file.</string>
@@ -510,4 +510,20 @@
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
+
+    <!-- Daily page: study records -->
+    <string name="study">Study</string>
+    <string name="study_full_plan">Full plan</string>
+    <string name="study_week_progress_format">Week %1$d · %2$d of %3$d done</string>
+    <string name="study_mark_done">Done</string>
+    <string name="study_done">Completed</string>
+    <string name="study_write_note">Write notes</string>
+    <string name="study_edit_note">Edit notes</string>
+    <string name="study_note">Notes</string>
+    <string name="study_note_hint">Where you got stuck, what clicked…</string>
+    <string name="study_record">Study record</string>
+    <string name="study_no_session_on_day">Nothing is planned for this day. You can still write notes.</string>
+    <string name="study_recent_notes">Recent notes</string>
+    <string name="study_week_done_format">%1$d/%2$d</string>
+    <string name="study_log_import_result_format">Study records updated for %1$d days.</string>
 </resources>

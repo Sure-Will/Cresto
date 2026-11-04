@@ -89,7 +89,7 @@ internal fun BoxScope.NavigationBar(
             liquidGlass = liquidGlass
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_clock_cycle),
+                painter = painterResource(id = R.drawable.ic_chart_bar_rising),
                 contentDescription = stringResource(R.string.daily)
             )
         }
@@ -106,7 +106,7 @@ internal fun BoxScope.NavigationBar(
             liquidGlass = liquidGlass
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_magnifying_glass_sparkle),
+                painter = painterResource(id = R.drawable.ic_gauge),
                 contentDescription = stringResource(R.string.insights)
             )
         }

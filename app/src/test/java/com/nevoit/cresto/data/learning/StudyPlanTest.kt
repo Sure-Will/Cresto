@@ -184,6 +184,28 @@ class StudyPlanTest {
     }
 
     @Test
+    fun sessionsCarryTheirStrand() {
+        // A nightly row keeps the strand of its weekday: Tuesday is the main track, Wednesday
+        // the side track named after its column without the weekday note.
+        assertEquals(StudyStrand("主线晚", 0, isReview = false), inWeek(2026, 11, 3).session?.strand)
+        assertEquals(StudyStrand("副线晚", 1, isReview = false), inWeek(2026, 11, 4).session?.strand)
+        assertEquals(StudyStrand("主线晚", 0, isReview = false), inWeek(2026, 11, 5).session?.strand)
+        assertEquals(StudyStrand("副线晚", 1, isReview = false), inWeek(2026, 11, 11).session?.strand)
+        // The Friday review is its own strand, after the tracks.
+        assertEquals(StudyStrand("复盘", 2, isReview = true), inWeek(2026, 11, 6).session?.strand)
+    }
+
+    @Test
+    fun sessionsInListsEveryDayOfTheWeek() {
+        val days = StudyPlanSchedule.sessionsIn(plan, plan.weeks.first())
+        assertEquals((3..8).map { LocalDate.of(2026, 11, it) }, days.map { it.first })
+        assertEquals(
+            listOf("画 框图；题一", "第一课", "主线一", "复盘", null, null),
+            days.map { it.second?.task }
+        )
+    }
+
+    @Test
     fun weekendShowsTheNextSession() {
         val saturday = inWeek(2026, 11, 7)
         assertNull(saturday.session)

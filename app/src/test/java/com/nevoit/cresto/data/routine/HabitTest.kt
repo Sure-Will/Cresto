@@ -86,13 +86,78 @@ class HabitTest {
             HabitCheckIn("c2", "a", LocalDateTime.of(2026, 11, 3, 21, 0, 5)),
             HabitCheckIn("c1", "a", LocalDateTime.of(2026, 11, 3, 8, 0))
         )
-        val text = HabitBackupCodec.encode(habits, checkIns, LocalDateTime.of(2026, 11, 3, 22, 0))
+        val text = HabitBackupCodec.encode(habits, checkIns, savedAt = LocalDateTime.of(2026, 11, 3, 22, 0))
         assertTrue(text.contains("\"version\": 2"))
 
         val decoded = HabitBackupCodec.decode(text, created, shanghai)
         assertEquals(listOf("a", "b"), decoded.habits.map { it.id })
         assertEquals(listOf("c1", "c2"), decoded.checkIns.map { it.id })
         assertEquals(checkIns.sortedBy { it.at }, decoded.checkIns)
+    }
+
+    @Test
+    fun studyLogsRoundTripAfterTheHabits() {
+        val habits = listOf(Habit("a", "第一", sortOrder = 0, createdAt = created))
+        val logs = listOf(
+            StudyLog(
+                date = LocalDate.of(2026, 11, 4),
+                done = true,
+                note = "写了第一段\n明天继续",
+                task = "示例任务",
+                strand = "副线晚",
+                updatedAt = LocalDateTime.of(2026, 11, 4, 22, 15)
+            ),
+            StudyLog(
+                date = LocalDate.of(2026, 11, 3),
+                note = "只写了心得",
+                updatedAt = LocalDateTime.of(2026, 11, 3, 23, 0)
+            )
+        )
+        val text = HabitBackupCodec.encode(habits, emptyList(), logs, savedAt = created)
+
+        // Daily-Track reads only "habits"; the study records ride along under their own key.
+        assertTrue(text.indexOf("\"habits\"") < text.indexOf("\"studyLogs\""))
+        val decoded = HabitBackupCodec.decode(text, created, shanghai)
+        assertEquals(listOf("a"), decoded.habits.map { it.id })
+        assertEquals(logs.sortedBy { it.date }, decoded.studyLogs)
+    }
+
+    @Test
+    fun exportWithoutStudyLogsStaysDailyTrackShaped() {
+        val text = HabitBackupCodec.encode(
+            listOf(Habit("a", "第一", sortOrder = 0, createdAt = created)),
+            emptyList(),
+            savedAt = created
+        )
+        assertTrue(!text.contains("studyLogs"))
+    }
+
+    @Test
+    fun decodesStudyLogsKeepingTheLatestCopyOfEachDay() {
+        val backup = HabitBackupCodec.decode(
+            """
+            {"studyLogs": [
+              {"date": "2026-11-04", "note": "旧", "updatedAt": "2026-11-04T21:00:00"},
+              {"date": "2026-11-04", "note": "新", "updatedAt": "2026-11-04T22:00:00"},
+              {"date": "2026-11-04", "note": "更旧", "updatedAt": "2026-11-04T20:00:00"},
+              {"date": "2026-11-05", "done": true},
+              {"date": "2026-11-06", "done": false, "note": "  "},
+              {"date": "someday", "done": true},
+              {"note": "没有日期"}
+            ]}
+            """.trimIndent(),
+            created,
+            shanghai
+        )
+        assertTrue(backup.habits.isEmpty())
+        assertEquals(
+            listOf(LocalDate.of(2026, 11, 4), LocalDate.of(2026, 11, 5)),
+            backup.studyLogs.map { it.date }
+        )
+        assertEquals("新", backup.studyLogs[0].note)
+        // Without an edit time a record counts as the oldest copy, so it never overwrites.
+        assertEquals(LocalDate.of(2026, 11, 5).atStartOfDay(), backup.studyLogs[1].updatedAt)
+        assertTrue(backup.studyLogs[1].done)
     }
 
     @Test
@@ -106,6 +171,11 @@ class HabitTest {
         assertProblem(HabitBackupException.Problem.NotJson, "not json")
         assertProblem(HabitBackupException.Problem.NoHabits, """{"todos": []}""")
         assertProblem(HabitBackupException.Problem.NoHabits, """{"habits": []}""")
+        assertProblem(HabitBackupException.Problem.NoHabits, """{"habits": [], "studyLogs": []}""")
+        assertProblem(
+            HabitBackupException.Problem.NoHabits,
+            """{"studyLogs": [{"date": "2026-11-04", "done": false}]}"""
+        )
         assertProblem(HabitBackupException.Problem.NoHabits, "42")
     }
 

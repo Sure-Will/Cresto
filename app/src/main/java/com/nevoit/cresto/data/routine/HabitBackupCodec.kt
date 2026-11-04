@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
@@ -17,7 +18,8 @@ import java.time.ZoneId
 
 data class HabitBackup(
     val habits: List<Habit>,
-    val checkIns: List<HabitCheckIn>
+    val checkIns: List<HabitCheckIn>,
+    val studyLogs: List<StudyLog> = emptyList()
 )
 
 class HabitBackupException(val problem: Problem) : Exception(problem.name) {
@@ -28,6 +30,7 @@ class HabitBackupException(val problem: Problem) : Exception(problem.name) {
  * Reads and writes the Daily-Track backup format, so either app can restore the other's export:
  * `{"version": 2, "savedAt": …, "habits": [{"id", "title", "checkIns": [{"id", "at"}]}]}`.
  * Times are local ISO date-times; older Daily-Track files list days in `completedDates`.
+ * Cresto adds a top-level `studyLogs` list, which Daily-Track ignores.
  */
 object HabitBackupCodec {
     private const val UNTITLED = "未命名习惯"
@@ -46,11 +49,17 @@ object HabitBackupCodec {
             is JsonObject -> root["habits"] as? JsonArray
             is JsonArray -> root
             else -> null
-        } ?: throw HabitBackupException(HabitBackupException.Problem.NoHabits)
+        }
+        val studyLogs = ((root as? JsonObject)?.get("studyLogs") as? JsonArray)
+            ?.let { decodeStudyLogs(it, zone) }
+            .orEmpty()
+        if (items == null && studyLogs.isEmpty()) {
+            throw HabitBackupException(HabitBackupException.Problem.NoHabits)
+        }
 
         val habits = mutableListOf<Habit>()
         val checkIns = LinkedHashMap<String, HabitCheckIn>()
-        items.filterIsInstance<JsonObject>().forEachIndexed { index, item ->
+        items.orEmpty().filterIsInstance<JsonObject>().forEachIndexed { index, item ->
             val title = item.string("title")?.trim()?.ifEmpty { null } ?: UNTITLED
             val id = item.string("id")?.trim()?.ifEmpty { null } ?: "imported-$index-$title"
             if (habits.any { it.id == id }) return@forEachIndexed
@@ -72,13 +81,39 @@ object HabitBackupCodec {
                 }
             }
         }
-        if (habits.isEmpty()) throw HabitBackupException(HabitBackupException.Problem.NoHabits)
-        return HabitBackup(habits, checkIns.values.toList())
+        if (habits.isEmpty() && studyLogs.isEmpty()) {
+            throw HabitBackupException(HabitBackupException.Problem.NoHabits)
+        }
+        return HabitBackup(habits, checkIns.values.toList(), studyLogs)
+    }
+
+    /** A day without a readable edit time counts as the oldest copy, so it never overwrites. */
+    private fun decodeStudyLogs(items: JsonArray, zone: ZoneId): List<StudyLog> {
+        val byDate = LinkedHashMap<LocalDate, StudyLog>()
+        items.filterIsInstance<JsonObject>().forEach { item ->
+            val date = item.string("date")?.trim()
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                ?: return@forEach
+            val log = StudyLog(
+                date = date,
+                done = (item["done"] as? JsonPrimitive)?.booleanOrNull ?: false,
+                note = item.string("note").orEmpty(),
+                task = item.string("task").orEmpty(),
+                strand = item.string("strand").orEmpty(),
+                updatedAt = item.string("updatedAt")?.let { parseTime(it, zone) }
+                    ?: date.atStartOfDay()
+            )
+            if (log.isEmpty) return@forEach
+            val existing = byDate[date]
+            if (existing == null || log.updatedAt.isAfter(existing.updatedAt)) byDate[date] = log
+        }
+        return byDate.values.toList()
     }
 
     fun encode(
         habits: List<Habit>,
         checkIns: List<HabitCheckIn>,
+        studyLogs: List<StudyLog> = emptyList(),
         savedAt: LocalDateTime = LocalDateTime.now()
     ): String {
         val byHabit = checkIns.groupBy { it.habitId }
@@ -97,6 +132,20 @@ object HabitBackupCodec {
                                     put("at", checkIn.at.toString())
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            if (studyLogs.isNotEmpty()) {
+                putJsonArray("studyLogs") {
+                    studyLogs.sortedBy { it.date }.forEach { log ->
+                        addJsonObject {
+                            put("date", log.date.toString())
+                            put("done", log.done)
+                            put("note", log.note)
+                            put("task", log.task)
+                            put("strand", log.strand)
+                            put("updatedAt", log.updatedAt.toString())
                         }
                     }
                 }

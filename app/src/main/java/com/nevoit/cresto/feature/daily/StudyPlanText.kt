@@ -1,16 +1,27 @@
 package com.nevoit.cresto.feature.daily
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.nevoit.cresto.R
 import com.nevoit.cresto.data.learning.StudyPlanProblem
 import com.nevoit.cresto.data.learning.StudyPlanState
 import com.nevoit.cresto.data.learning.StudyPlanSyncError
+import com.nevoit.cresto.data.learning.StudyStrand
 import com.nevoit.cresto.data.learning.StudyWeek
+import com.nevoit.cresto.theme.harmonize
+import com.nevoit.glasense.theme.tokens.Amber500
+import com.nevoit.glasense.theme.tokens.Blue500
+import com.nevoit.glasense.theme.tokens.Pink500
+import com.nevoit.glasense.theme.tokens.Teal500
+import com.nevoit.glasense.theme.tokens.Violet500
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
 private val monthDayFormatter = DateTimeFormatter.ofPattern("M/d")
@@ -20,6 +31,24 @@ internal fun StudyWeek.dateRange(): String =
 
 internal fun LocalDate.studyLabel(): String =
     format(DateTimeFormatter.ofPattern("M/d E", Locale.getDefault()))
+
+internal fun DayOfWeek.narrowLabel(): String = getDisplayName(TextStyle.NARROW, Locale.getDefault())
+
+/** Monday to Sunday of the calendar week containing this date. */
+internal fun LocalDate.calendarWeek(): List<LocalDate> {
+    val monday = with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    return (0L until 7L).map { monday.plusDays(it) }
+}
+
+private val trackPalette = listOf(Blue500, Teal500, Violet500, Pink500)
+
+/** Colour for the n-th track of the weeks table, in the same order as its columns. */
+@Composable
+internal fun trackColor(index: Int): Color =
+    harmonize(trackPalette[index.coerceAtLeast(0) % trackPalette.size])
+
+@Composable
+internal fun StudyStrand.color(): Color = if (isReview) harmonize(Amber500) else trackColor(index)
 
 internal fun formatSyncedAt(millis: Long): String =
     Instant.ofEpochMilli(millis)

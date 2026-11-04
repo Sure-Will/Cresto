@@ -480,10 +480,10 @@
     <string name="habit_delete">删除习惯</string>
     <string name="habit_delete_message">会删除这个习惯和它的 %1$s，无法撤销。</string>
     <string name="habit_delete_check_in">删除打卡</string>
-    <string name="habit_backup">习惯（Daily-Track）</string>
+    <string name="habit_backup">习惯与学习记录</string>
     <string name="habit_export">导出习惯</string>
     <string name="habit_import">导入习惯</string>
-    <string name="habit_backup_footer">与 Daily-Track 备份格式互通，两边的文件都能互相导入。导入按 ID 合并，不会删除已有记录。</string>
+    <string name="habit_backup_footer">习惯部分与 Daily-Track 备份格式互通，两边的文件都能互相导入；学习的完成情况和心得也一起导出。导入按 ID 和日期合并，不会删除已有记录。</string>
     <string name="habit_import_result_format">新增 %1$d 个习惯，合并 %2$d 个，新增 %3$d 次打卡。</string>
     <string name="habit_import_not_json">文件不是有效的 JSON。</string>
     <string name="habit_import_no_habits">文件里没有找到习惯。</string>
@@ -493,4 +493,20 @@
     <plurals name="habit_days">
         <item quantity="other">%d 天</item>
     </plurals>
+
+    <!-- Daily page: study records -->
+    <string name="study">学习</string>
+    <string name="study_full_plan">完整计划</string>
+    <string name="study_week_progress_format">第 %1$d 周 · 已完成 %2$d/%3$d</string>
+    <string name="study_mark_done">完成</string>
+    <string name="study_done">已完成</string>
+    <string name="study_write_note">写心得</string>
+    <string name="study_edit_note">改心得</string>
+    <string name="study_note">心得</string>
+    <string name="study_note_hint">今天卡在哪、想明白了什么…</string>
+    <string name="study_record">学习记录</string>
+    <string name="study_no_session_on_day">这天没有安排，也可以写心得。</string>
+    <string name="study_recent_notes">最近心得</string>
+    <string name="study_week_done_format">%1$d/%2$d</string>
+    <string name="study_log_import_result_format">学习记录更新了 %1$d 天。</string>
 </resources>
