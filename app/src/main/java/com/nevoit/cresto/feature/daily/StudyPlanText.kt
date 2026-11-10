@@ -3,7 +3,10 @@ package com.nevoit.cresto.feature.daily
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.work.WorkInfo
 import com.nevoit.cresto.R
+import com.nevoit.cresto.data.learning.StudyLogSyncError
+import com.nevoit.cresto.data.learning.StudyLogSyncState
 import com.nevoit.cresto.data.learning.StudyPlanProblem
 import com.nevoit.cresto.data.learning.StudyPlanState
 import com.nevoit.cresto.data.learning.StudyPlanSyncError
@@ -85,6 +88,33 @@ internal fun StudyPlanSyncError.message(problem: StudyPlanProblem?): String {
                 }
             }
         )
+    }
+}
+
+@Composable
+internal fun StudyLogSyncError.message(): String {
+    val reason = when (this) {
+        StudyLogSyncError.NotConfigured -> stringResource(R.string.study_error_not_configured)
+        StudyLogSyncError.InvalidSource -> stringResource(R.string.study_error_invalid_source)
+        StudyLogSyncError.Unauthorized -> stringResource(R.string.study_error_unauthorized)
+        StudyLogSyncError.NoWriteAccess -> stringResource(R.string.study_log_error_no_write)
+        StudyLogSyncError.RateLimited -> stringResource(R.string.study_error_rate_limited)
+        StudyLogSyncError.NotFound -> stringResource(R.string.study_error_not_found)
+        StudyLogSyncError.Network -> stringResource(R.string.study_error_network)
+        StudyLogSyncError.Server -> stringResource(R.string.study_error_server)
+    }
+    return stringResource(R.string.study_log_error_format, reason)
+}
+
+/** Trailing text of the study log row: queued or running work first, then the last result. */
+@Composable
+internal fun logSyncStatus(sync: StudyLogSyncState, upload: WorkInfo.State?, hasToken: Boolean): String {
+    return when {
+        upload == WorkInfo.State.RUNNING -> stringResource(R.string.study_log_uploading)
+        upload != null && hasToken -> stringResource(R.string.study_log_pending)
+        hasToken && sync.error != null -> stringResource(R.string.study_log_failed)
+        sync.syncedAt != null -> formatSyncedAt(sync.syncedAt)
+        else -> stringResource(R.string.study_log_not_uploaded)
     }
 }
 

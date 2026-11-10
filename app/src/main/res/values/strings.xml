@@ -459,7 +459,14 @@
     <string name="study_syncing">Syncing…</string>
     <string name="study_synced_at_format">Plan synced %s</string>
     <string name="study_showing_cached_format">Showing the plan synced %s.</string>
-    <string name="study_token_hint">Use a fine-grained token limited to this repository with read-only Contents access. It stays on this device and is excluded from backups.</string>
+    <string name="study_token_hint">Use a fine-grained token limited to this repository with Read and write Contents access: Cresto reads the plan and writes your study log to cresto-study-log.md beside it. The token stays on this device and is excluded from backups.</string>
+    <string name="study_log_upload">Upload Study Log</string>
+    <string name="study_log_pending">Waiting</string>
+    <string name="study_log_uploading">Uploading…</string>
+    <string name="study_log_failed">Failed</string>
+    <string name="study_log_not_uploaded">Not uploaded</string>
+    <string name="study_log_error_format">Couldn\'t upload the study log: %s</string>
+    <string name="study_log_error_no_write">The token cannot write to this repository. On GitHub, set its Contents permission to Read and write, then tap Sync Now.</string>
     <string name="study_error_not_configured">No token yet.</string>
     <string name="study_error_invalid_source">The repository must look like owner/name and the path must point to a file.</string>
     <string name="study_error_unauthorized">The token is invalid or has expired.</string>

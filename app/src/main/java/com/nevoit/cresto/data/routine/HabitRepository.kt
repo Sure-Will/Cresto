@@ -2,6 +2,7 @@ package com.nevoit.cresto.data.routine
 
 import android.content.Context
 import androidx.room.withTransaction
+import com.nevoit.cresto.data.learning.StudyLogSyncScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import java.util.UUID
  * scope so a check-in or a note survives leaving the screen.
  */
 class HabitRepository private constructor(context: Context) {
+    private val appContext = context.applicationContext
     private val database = RoutineDatabase.get(context)
     private val dao = database.habitDao()
     private val studyLogDao = database.studyLogDao()
@@ -108,7 +110,13 @@ class HabitRepository private constructor(context: Context) {
                 )
                 if (updated.isEmpty) studyLogDao.delete(date) else studyLogDao.upsert(updated)
             }
+            StudyLogSyncScheduler.scheduleAfterEdit(appContext)
         }
+    }
+
+    /** Every study record, read after the writes queued before this call. */
+    suspend fun studyLogsSnapshot(): List<StudyLog> = writeMutex.withLock {
+        withContext(Dispatchers.IO) { studyLogDao.all() }
     }
 
     /** @throws HabitBackupException when [json] is not a habit backup. */
@@ -120,6 +128,8 @@ class HabitRepository private constructor(context: Context) {
                     .copy(studyLogsChanged = studyLogDao.merge(backup.studyLogs))
             }
         }
+    }.also { result ->
+        if (result.studyLogsChanged > 0) StudyLogSyncScheduler.scheduleAfterEdit(appContext)
     }
 
     suspend fun export(): String = writeMutex.withLock {

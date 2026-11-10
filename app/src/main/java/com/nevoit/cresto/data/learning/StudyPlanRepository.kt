@@ -1,6 +1,7 @@
 package com.nevoit.cresto.data.learning
 
 import android.content.Context
+import com.nevoit.cresto.data.routine.StudyLog
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,23 @@ data class StudyPlanState(
     val problem: StudyPlanProblem? = null
 )
 
+data class StudyLogSyncState(
+    /** When the study log file last matched the records on this device. */
+    val syncedAt: Long? = null,
+    val error: StudyLogSyncError? = null
+)
+
+enum class StudyLogPushOutcome {
+    Uploaded,
+    UpToDate,
+    /** No token, or no records: an empty file would replace the history kept in the repository. */
+    Skipped,
+    /** Worth trying again later: network, rate limit or a GitHub hiccup. */
+    Retry,
+    /** Needs the user to fix the token, repository or path. */
+    Failed
+}
+
 /**
  * Keeps the last plan that parsed, so a failed download or a broken edit never blanks the page.
  * Settings live in their own MMKV file, which the backup rules exclude because of the token.
@@ -35,9 +53,20 @@ class StudyPlanRepository private constructor(context: Context) {
     private val cacheFile = File(context.applicationContext.filesDir, "study-plan/plan.md")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val refreshMutex = Mutex()
+    private val pushMutex = Mutex()
 
     private val _state = MutableStateFlow(StudyPlanState())
     val state: StateFlow<StudyPlanState> = _state.asStateFlow()
+
+    private val _logSync = MutableStateFlow(
+        StudyLogSyncState(
+            syncedAt = mmkv.decodeLong(KEY_LOG_SYNCED_AT, 0L).takeIf { it > 0L },
+            error = mmkv.decodeString(KEY_LOG_ERROR)?.let { name ->
+                StudyLogSyncError.entries.firstOrNull { it.name == name }
+            }
+        )
+    )
+    val logSync: StateFlow<StudyLogSyncState> = _logSync.asStateFlow()
 
     private val _token = MutableStateFlow(mmkv.decodeString(KEY_TOKEN, "").orEmpty())
     val token: StateFlow<String> = _token.asStateFlow()
@@ -72,26 +101,83 @@ class StudyPlanRepository private constructor(context: Context) {
     }
 
     suspend fun reset() = withContext(Dispatchers.IO) {
-        // Wait for cache loading and an in-flight refresh before removing their results.
+        // Wait for cache loading, an in-flight refresh and an upload before removing their results.
         refreshMutex.withLock {
-            for (file in listOf(cacheFile, File(cacheFile.parentFile, "${cacheFile.name}.part"))) {
-                if (file.exists() && !file.delete()) {
-                    throw IOException("Could not remove the study plan cache")
+            pushMutex.withLock {
+                for (file in listOf(cacheFile, File(cacheFile.parentFile, "${cacheFile.name}.part"))) {
+                    if (file.exists() && !file.delete()) {
+                        throw IOException("Could not remove the study plan cache")
+                    }
                 }
+                mmkv.clearAll()
+                _token.value = ""
+                _repository.value = DEFAULT_REPOSITORY
+                _path.value = DEFAULT_PATH
+                _state.value = StudyPlanState()
+                _logSync.value = StudyLogSyncState()
             }
-            mmkv.clearAll()
-            _token.value = ""
-            _repository.value = DEFAULT_REPOSITORY
-            _path.value = DEFAULT_PATH
-            _state.value = StudyPlanState()
         }
     }
 
-    /** Refreshes when the last attempt is older than [STALE_AFTER_MS]. */
-    fun refreshIfStale() {
+    /**
+     * Writes [logs] to the study log file beside the plan, unless that exact content was the last
+     * upload to the same place. Blocking network work runs on IO.
+     */
+    suspend fun pushStudyLog(logs: List<StudyLog>): StudyLogPushOutcome = withContext(Dispatchers.IO) {
+        pushMutex.withLock {
+            val token = _token.value
+            if (token.isBlank() || logs.all { it.isEmpty }) return@withLock StudyLogPushOutcome.Skipped
+
+            val repository = _repository.value
+            val planPath = _path.value
+            val path = StudyLogMarkdown.pathBesidePlan(planPath)
+            val markdown = StudyLogMarkdown.render(logs, planPath)
+            val fingerprint = StudyLogMarkdown.fingerprint(repository, path, markdown)
+            if (fingerprint == mmkv.decodeString(KEY_LOG_FINGERPRINT)) {
+                recordLogError(null)
+                return@withLock StudyLogPushOutcome.UpToDate
+            }
+
+            val target = "$repository\n$path"
+            val knownSha = mmkv.decodeString(KEY_LOG_SHA)
+                ?.takeIf { mmkv.decodeString(KEY_LOG_TARGET) == target }
+            when (val result = StudyLogRemote.push(repository, path, token, markdown, knownSha)) {
+                is StudyLogPushResult.Success -> {
+                    val now = System.currentTimeMillis()
+                    mmkv.encode(KEY_LOG_FINGERPRINT, fingerprint)
+                    mmkv.encode(KEY_LOG_SHA, result.sha)
+                    mmkv.encode(KEY_LOG_TARGET, target)
+                    mmkv.encode(KEY_LOG_SYNCED_AT, now)
+                    mmkv.removeValueForKey(KEY_LOG_ERROR)
+                    _logSync.value = StudyLogSyncState(syncedAt = now)
+                    StudyLogPushOutcome.Uploaded
+                }
+
+                is StudyLogPushResult.Failure -> {
+                    recordLogError(result.error)
+                    when (result.error) {
+                        StudyLogSyncError.Network,
+                        StudyLogSyncError.Server,
+                        StudyLogSyncError.RateLimited -> StudyLogPushOutcome.Retry
+
+                        else -> StudyLogPushOutcome.Failed
+                    }
+                }
+            }
+        }
+    }
+
+    private fun recordLogError(error: StudyLogSyncError?) {
+        if (error == null) mmkv.removeValueForKey(KEY_LOG_ERROR) else mmkv.encode(KEY_LOG_ERROR, error.name)
+        _logSync.update { it.copy(error = error) }
+    }
+
+    /** Refreshes when the last attempt is older than [STALE_AFTER_MS]; true when it started one. */
+    fun refreshIfStale(): Boolean {
         val lastAttempt = mmkv.decodeLong(KEY_LAST_ATTEMPT_AT, 0L)
-        if (System.currentTimeMillis() - lastAttempt < STALE_AFTER_MS) return
+        if (System.currentTimeMillis() - lastAttempt < STALE_AFTER_MS) return false
         refresh()
+        return true
     }
 
     fun refresh() {
@@ -170,6 +256,11 @@ class StudyPlanRepository private constructor(context: Context) {
         private const val KEY_SYNCED_AT = "synced_at"
         private const val KEY_LAST_ATTEMPT_AT = "last_attempt_at"
         private const val STALE_AFTER_MS = 30L * 60L * 1000L
+        private const val KEY_LOG_FINGERPRINT = "log_fingerprint"
+        private const val KEY_LOG_SHA = "log_sha"
+        private const val KEY_LOG_TARGET = "log_target"
+        private const val KEY_LOG_SYNCED_AT = "log_synced_at"
+        private const val KEY_LOG_ERROR = "log_error"
 
         @Volatile
         private var instance: StudyPlanRepository? = null

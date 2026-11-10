@@ -44,9 +44,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.WorkInfo
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.nevoit.cresto.R
+import com.nevoit.cresto.data.learning.StudyLogSyncScheduler
 import com.nevoit.cresto.data.learning.StudyPlan
 import com.nevoit.cresto.data.learning.StudyPlanRepository
 import com.nevoit.cresto.data.learning.StudyPlanSchedule
@@ -85,6 +87,9 @@ fun StudyPlanScreen() {
     val repositoryName by repository.repository.collectAsStateWithLifecycle()
     val path by repository.path.collectAsStateWithLifecycle()
     val token by repository.token.collectAsStateWithLifecycle()
+    val logSync by repository.logSync.collectAsStateWithLifecycle()
+    val logUpload by remember { StudyLogSyncScheduler.observe(context) }
+        .collectAsStateWithLifecycle(initialValue = null)
     var today by remember { mutableStateOf(LocalDate.now()) }
     val habitRepository = remember { HabitRepository.get(context) }
     val studyLogs by habitRepository.studyLogs.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -217,12 +222,17 @@ fun StudyPlanScreen() {
             }
             Section(
                 footer = {
-                    state.error?.message(state.problem) ?: stringResource(R.string.study_token_hint)
+                    state.error?.message(state.problem)
+                        ?: logSync.error?.takeIf { token.isNotBlank() }?.message()
+                        ?: stringResource(R.string.study_token_hint)
                 }
             ) {
                 Row(
                     enabled = !state.isSyncing,
-                    onClick = repository::refresh,
+                    onClick = {
+                        repository.refresh()
+                        StudyLogSyncScheduler.syncNow(context)
+                    },
                     trailing = {
                         Text(
                             if (state.isSyncing) {
@@ -234,6 +244,13 @@ fun StudyPlanScreen() {
                     }
                 ) {
                     Text(stringResource(R.string.study_sync_now))
+                }
+                Row(
+                    enabled = logUpload != WorkInfo.State.RUNNING,
+                    onClick = { StudyLogSyncScheduler.syncNow(context) },
+                    trailing = { Text(logSyncStatus(logSync, logUpload, hasToken = token.isNotBlank())) }
+                ) {
+                    Text(stringResource(R.string.study_log_upload))
                 }
             }
             item { VGap() }

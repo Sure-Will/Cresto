@@ -444,7 +444,14 @@
     <string name="study_syncing">同步中…</string>
     <string name="study_synced_at_format">计划同步于 %s</string>
     <string name="study_showing_cached_format">显示的是 %s 同步的计划。</string>
-    <string name="study_token_hint">使用只授权这个仓库、Contents 只读的细粒度 token。token 只存在本机，不进备份。</string>
+    <string name="study_token_hint">使用只授权这个仓库的细粒度 token，Contents 设为读写：读取计划，并把学习记录写到同一目录的 cresto-study-log.md。token 只存在本机，不进备份。</string>
+    <string name="study_log_upload">上传学习记录</string>
+    <string name="study_log_pending">等待上传</string>
+    <string name="study_log_uploading">上传中…</string>
+    <string name="study_log_failed">上传失败</string>
+    <string name="study_log_not_uploaded">未上传</string>
+    <string name="study_log_error_format">学习记录上传失败：%s</string>
+    <string name="study_log_error_no_write">token 没有写入权限。请在 GitHub 把它的 Contents 权限改成读写，再点「立即同步」。</string>
     <string name="study_error_not_configured">还没有填写 token。</string>
     <string name="study_error_invalid_source">仓库要写成 owner/name，路径要指向一个文件。</string>
     <string name="study_error_unauthorized">token 无效或已过期。</string>

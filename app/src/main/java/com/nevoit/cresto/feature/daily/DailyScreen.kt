@@ -38,6 +38,7 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.shapes.Capsule
 import com.nevoit.cresto.R
+import com.nevoit.cresto.data.learning.StudyLogSyncScheduler
 import com.nevoit.cresto.data.learning.StudyPlanRepository
 import com.nevoit.cresto.data.learning.StudyPlanSchedule
 import com.nevoit.cresto.data.routine.HabitRepository
@@ -107,7 +108,8 @@ fun BoxScope.DailyScreen() {
 
     LifecycleResumeEffect(repository) {
         today = LocalDate.now()
-        repository.refreshIfStale()
+        // Also catches records written before uploads existed or while the token could not write.
+        if (repository.refreshIfStale()) StudyLogSyncScheduler.syncNow(context)
         onPauseOrDispose { }
     }
 
